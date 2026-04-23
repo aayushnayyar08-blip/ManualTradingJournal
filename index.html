@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Discretionary Ledger</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%C2%A7%3C/text%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,900&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --panel: #111111;
+    --panel-2: #161616;
+    --ink: #e8e4d8;
+    --dim: #6b6b6b;
+    --line: #252525;
+    --green: #7fb069;
+    --red: #d1495b;
+    --amber: #e6b450;
+    --cyan: #4cc9c9;
+    --mag: #c77dff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; min-height: 100vh; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1; background: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px); }
+  .shell { position: relative; z-index: 2; max-width: 1400px; margin: 0 auto; padding: 0 24px 120px; }
+
+  /* SETUP SCREEN */
+  .setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+  .setup-card { max-width: 540px; width: 100%; background: var(--panel); border: 1px solid var(--line); padding: 40px; }
+  .setup-card h1 { font-family: 'Fraunces', serif; font-size: 36px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .setup-card h1 em { font-style: italic; font-weight: 400; color: var(--dim); }
+  .setup-card .sub { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); margin-bottom: 28px; }
+  .setup-card p { font-size: 13px; color: var(--ink); margin-bottom: 16px; line-height: 1.6; }
+  .setup-card .caveat { font-size: 11px; color: var(--dim); font-style: italic; margin-bottom: 20px; }
+  .setup-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+  .setup-choice { padding: 20px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; transition: all 0.15s; text-align: left; }
+  .setup-choice:hover { border-color: var(--ink); }
+  .setup-choice h3 { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .setup-choice p { font-size: 11px; color: var(--dim); margin: 0; }
+  .sync-key-display { background: var(--bg); border: 1px solid var(--amber); padding: 16px; margin: 16px 0; font-size: 14px; letter-spacing: 0.1em; color: var(--amber); word-break: break-all; font-weight: 700; text-align: center; }
+  .setup-card input[type="text"], .setup-card input[type="password"] { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 14px; padding: 12px 14px; margin-bottom: 12px; letter-spacing: 0.05em; }
+  .setup-card input:focus { outline: none; border-color: var(--ink); }
+  .setup-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn { background: var(--ink); color: var(--bg); border: none; padding: 12px 24px; font-family: inherit; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .btn:hover { background: var(--amber); }
+  .btn:disabled { background: var(--line); color: var(--dim); cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--dim); border: 1px solid var(--line); }
+  .btn.ghost:hover { color: var(--ink); border-color: var(--ink); background: transparent; }
+
+  /* MASTHEAD */
+  .masthead { border-bottom: 1px solid var(--line); padding: 20px 0 16px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 24px; }
+  .masthead .left { font-size: 10px; color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase; }
+  .masthead .right { text-align: right; font-size: 10px; color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase; }
+  .brand { font-family: 'Fraunces', serif; font-weight: 900; font-size: 42px; letter-spacing: -0.02em; text-align: center; line-height: 1; }
+  .brand em { font-style: italic; font-weight: 400; color: var(--dim); }
+  .subhead { text-align: center; font-size: 10px; letter-spacing: 0.4em; color: var(--dim); text-transform: uppercase; margin-top: 6px; }
+  .rulebar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); border-bottom: 3px double var(--line); padding: 6px 0; margin-top: 16px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+  .rulebar .live { color: var(--green); }
+  .rulebar .live::before { content: '●'; margin-right: 6px; animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .sync-indicator { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); }
+  .sync-dot.synced { background: var(--green); }
+  .sync-dot.syncing { background: var(--amber); animation: pulse 0.8s ease-in-out infinite; }
+  .sync-dot.error { background: var(--red); }
+  .sync-dot.local { background: var(--cyan); }
+
+  /* STRATEGY PICKER */
+  .strategy-bar { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .strategy-bar label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); }
+  .strategy-select { background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 13px; padding: 8px 12px; min-width: 240px; font-weight: 500; }
+  .strategy-select:focus { outline: none; border-color: var(--ink); }
+  .strategy-actions { display: flex; gap: 6px; margin-left: auto; }
+  .strategy-actions button { background: transparent; border: 1px solid var(--line); color: var(--dim); padding: 6px 12px; font-family: inherit; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .strategy-actions button:hover { color: var(--ink); border-color: var(--ink); }
+  .strategy-actions button.danger:hover { color: var(--red); border-color: var(--red); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 0; margin-top: 24px; border-bottom: 1px solid var(--line); }
+  .tab { flex: 1; padding: 14px 16px; background: transparent; border: none; color: var(--dim); font-family: inherit; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: color 0.15s; border-bottom: 2px solid transparent; }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .tab .n { font-size: 9px; color: var(--dim); margin-right: 8px; }
+  .tab.active .n { color: var(--amber); }
+
+  .panel { display: none; padding: 24px 0; }
+  .panel.active { display: block; animation: fadein 0.25s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); padding: 20px; }
+  .card-title { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  .card-title .idx { color: var(--amber); font-weight: 700; }
+
+  /* RULES */
+  .rules-col h3 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .rules-col h3 .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); margin-left: 8px; vertical-align: middle; }
+  .rules-col .mini { font-size: 11px; color: var(--dim); margin-bottom: 16px; font-style: italic; }
+  .rule-row { display: grid; grid-template-columns: 24px 1fr auto auto; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--line); align-items: start; }
+  .rule-row:last-child { border-bottom: none; }
+  .rule-num { font-size: 10px; color: var(--dim); font-weight: 700; padding-top: 3px; }
+  .rule-input { background: transparent; border: none; color: var(--ink); font-family: inherit; font-size: 12px; width: 100%; padding: 2px 0; resize: none; line-height: 1.4; }
+  .rule-input:focus { outline: none; background: rgba(232,228,216,0.03); }
+  .rule-del, .rule-cond { background: transparent; border: none; color: var(--dim); cursor: pointer; font-family: inherit; font-size: 11px; padding: 0 4px; letter-spacing: 0.15em; }
+  .rule-del:hover { color: var(--red); }
+  .rule-cond:hover { color: var(--amber); }
+  .rule-cond.active { color: var(--amber); }
+  .rule-conditions { grid-column: 2 / -1; margin-top: 8px; padding: 10px; background: var(--bg); border: 1px solid var(--line); border-left: 2px solid var(--amber); font-size: 11px; }
+  .rule-conditions .cond-row { display: grid; grid-template-columns: 100px 1fr 1fr auto; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .rule-conditions .cond-row:last-child { margin-bottom: 0; }
+  .rule-conditions select, .rule-conditions input { background: var(--panel); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 11px; padding: 4px 8px; }
+  .rule-conditions label { color: var(--dim); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; }
+  .rule-conditions .cond-hint { color: var(--dim); font-size: 10px; margin-top: 6px; font-style: italic; }
+  .add-rule { width: 100%; background: transparent; border: 1px dashed var(--line); color: var(--dim); padding: 8px; font-family: inherit; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; margin-top: 10px; transition: all 0.15s; }
+  .add-rule:hover { color: var(--ink); border-color: var(--ink); }
+  .rule-section { margin-bottom: 24px; }
+  .rule-section-hdr { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--amber); margin-bottom: 8px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+
+  /* CHECKLIST */
+  .checklist-hdr { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom: 20px; }
+  .side-select { display: flex; gap: 0; border: 1px solid var(--line); }
+  .side-btn { flex: 1; padding: 12px 24px; background: transparent; border: none; color: var(--dim); font-family: inherit; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .side-btn.active.long { background: var(--green); color: var(--bg); }
+  .side-btn.active.short { background: var(--red); color: var(--bg); }
+  .clock { font-family: 'Fraunces', serif; font-size: 36px; font-weight: 900; letter-spacing: -0.02em; text-align: center; }
+  .clock .ampm { font-size: 12px; color: var(--dim); margin-left: 6px; letter-spacing: 0.2em; }
+  .clock-label { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); text-align: center; margin-top: 2px; }
+  .window-state { text-align: right; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
+  .window-state .v { font-size: 16px; font-family: 'Fraunces', serif; font-weight: 600; display: block; margin-top: 2px; letter-spacing: 0; }
+  .window-state .v.ok { color: var(--green); }
+  .window-state .v.no { color: var(--red); }
+
+  .check-item { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; padding: 14px 16px; border: 1px solid var(--line); margin-bottom: -1px; background: var(--panel); cursor: pointer; transition: all 0.15s; gap: 12px; }
+  .check-item:hover { background: var(--panel-2); }
+  .check-item.checked { background: linear-gradient(90deg, rgba(127,176,105,0.08) 0%, transparent 100%); border-color: rgba(127,176,105,0.3); }
+  .check-item.checked.short { background: linear-gradient(90deg, rgba(209,73,91,0.08) 0%, transparent 100%); border-color: rgba(209,73,91,0.3); }
+  .check-item.inactive { opacity: 0.4; cursor: not-allowed; }
+  .check-item.blackout { background: linear-gradient(90deg, rgba(209,73,91,0.1) 0%, transparent 100%); border-color: var(--red); }
+  .check-box { width: 22px; height: 22px; border: 1.5px solid var(--dim); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .checked .check-box { border-color: var(--green); background: var(--green); color: var(--bg); }
+  .checked.short .check-box { border-color: var(--red); background: var(--red); color: var(--bg); }
+  .check-text { font-size: 12px; line-height: 1.45; }
+  .check-text .cond-badge { display: inline-block; font-size: 9px; letter-spacing: 0.2em; padding: 2px 6px; background: var(--panel-2); color: var(--amber); margin-left: 6px; text-transform: uppercase; vertical-align: middle; }
+  .check-text .cond-badge.blackout { color: var(--red); }
+  .check-text .cond-badge.inactive { color: var(--dim); }
+  .check-meta { font-size: 9px; color: var(--dim); letter-spacing: 0.2em; text-transform: uppercase; text-align: right; white-space: nowrap; }
+
+  /* GATE */
+  .gate { margin-top: 28px; padding: 24px; border: 1px solid var(--line); background: var(--panel); display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; }
+  .gate.armed { border-color: var(--green); background: linear-gradient(90deg, rgba(127,176,105,0.08) 0%, var(--panel) 100%); }
+  .gate.armed.short { border-color: var(--red); background: linear-gradient(90deg, rgba(209,73,91,0.08) 0%, var(--panel) 100%); }
+  .gate.locked { border-color: var(--red); background: linear-gradient(90deg, rgba(209,73,91,0.15) 0%, var(--panel) 100%); }
+  .gate-status { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 900; letter-spacing: -0.01em; }
+  .gate-status.armed { color: var(--green); }
+  .gate-status.armed.short { color: var(--red); }
+  .gate-status.locked { color: var(--red); }
+  .gate-sub { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); margin-top: 4px; }
+  .gate-fill { width: 280px; height: 6px; background: var(--panel-2); border: 1px solid var(--line); position: relative; overflow: hidden; }
+  .gate-fill-bar { height: 100%; background: var(--amber); transition: width 0.3s ease, background 0.3s; }
+  .gate-fill.full .gate-fill-bar { background: var(--green); }
+  .gate-fill.full.short .gate-fill-bar { background: var(--red); }
+  .gate-count { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 600; margin-top: 6px; text-align: right; }
+
+  /* GUARDRAIL BANNER */
+  .guardrail { margin-top: 16px; padding: 14px 20px; border: 1px solid var(--red); background: linear-gradient(90deg, rgba(209,73,91,0.15), transparent); display: flex; justify-content: space-between; align-items: center; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+  .guardrail .v { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; color: var(--red); letter-spacing: 0; }
+  .guardrail.warn { border-color: var(--amber); background: linear-gradient(90deg, rgba(230,180,80,0.1), transparent); }
+  .guardrail.warn .v { color: var(--amber); }
+  .guardrail.ok { border-color: var(--line); background: var(--panel); }
+  .guardrail.ok .v { color: var(--green); }
+
+  /* ENTRY FORM */
+  .entry-form { margin-top: 20px; padding: 24px; border: 1px solid var(--line); background: var(--panel); }
+  .entry-form-hdr { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; margin-bottom: 16px; letter-spacing: -0.01em; }
+  .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .form-field label { display: block; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+  .form-field input, .form-field select, .form-field textarea { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 13px; padding: 8px 10px; }
+  .form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: var(--ink); }
+  .form-field textarea { resize: vertical; min-height: 60px; }
+  .btn-primary { background: var(--ink); color: var(--bg); border: none; padding: 12px 28px; font-family: inherit; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .btn-primary:hover { background: var(--amber); }
+  .btn-primary:disabled { background: var(--line); color: var(--dim); cursor: not-allowed; }
+  .btn-secondary { background: transparent; color: var(--dim); border: 1px solid var(--line); padding: 12px 20px; font-family: inherit; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .btn-secondary:hover { color: var(--ink); border-color: var(--ink); }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); padding: 8px 14px; font-family: inherit; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer; }
+  .btn-danger:hover { background: var(--red); color: var(--bg); }
+
+  /* OPEN POS */
+  .open-pos { padding: 24px; border: 2px solid var(--amber); background: linear-gradient(180deg, rgba(230,180,80,0.06), transparent); margin-bottom: 28px; }
+  .open-pos-hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+  .open-pos-hdr h2 { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 900; letter-spacing: -0.01em; }
+  .open-pos-hdr .side-pill { display: inline-block; padding: 3px 10px; font-size: 10px; letter-spacing: 0.3em; font-weight: 700; margin-left: 10px; vertical-align: middle; }
+  .side-pill.long { background: var(--green); color: var(--bg); }
+  .side-pill.short { background: var(--red); color: var(--bg); }
+  .pos-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; }
+  .pos-stat { border-left: 1px solid var(--line); padding-left: 16px; }
+  .pos-stat:first-child { border-left: none; padding-left: 0; }
+  .pos-stat .k { font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+  .pos-stat .v { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; }
+  .pos-stat .v.green { color: var(--green); }
+  .pos-stat .v.red { color: var(--red); }
+  .exit-monitors { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .monitor { background: var(--panel); border: 1px solid var(--line); padding: 14px; }
+  .monitor-hdr { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+  .monitor-val { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; }
+  .monitor.trigger { border-color: var(--red); background: linear-gradient(180deg, rgba(209,73,91,0.1), var(--panel)); }
+  .monitor.trigger .monitor-val { color: var(--red); }
+  .monitor-sub { font-size: 10px; color: var(--dim); margin-top: 4px; }
+  .exit-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; margin-top: 20px; align-items: end; }
+
+  /* TABLE */
+  .log-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .log-table th { text-align: left; padding: 10px 8px; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--line); font-weight: 500; }
+  .log-table td { padding: 12px 8px; border-bottom: 1px solid var(--line); }
+  .log-table tbody tr:hover { background: var(--panel); }
+  .log-table .side-long { color: var(--green); font-weight: 700; }
+  .log-table .side-short { color: var(--red); font-weight: 700; }
+  .log-table .r-pos { color: var(--green); font-weight: 700; }
+  .log-table .r-neg { color: var(--red); font-weight: 700; }
+  .adh-pip { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 1px; background: var(--line); }
+  .adh-pip.on { background: var(--amber); }
+
+  /* STATS */
+  .stat-big { text-align: left; border-left: 2px solid var(--line); padding-left: 16px; }
+  .stat-big .k { font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+  .stat-big .v { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 900; letter-spacing: -0.02em; line-height: 1; }
+  .stat-big .v.green { color: var(--green); }
+  .stat-big .v.red { color: var(--red); }
+  .stat-big .sub { font-size: 10px; color: var(--dim); margin-top: 6px; letter-spacing: 0.15em; text-transform: uppercase; }
+  .equity-wrap { margin-top: 24px; padding: 24px; border: 1px solid var(--line); background: var(--panel); }
+  .equity-hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+  .equity-hdr h3 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; }
+  .equity-hdr .legend { font-size: 10px; color: var(--dim); letter-spacing: 0.2em; text-transform: uppercase; }
+  .ascii-chart { font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.2; color: var(--green); white-space: pre; overflow-x: auto; padding: 8px 0; }
+  .adh-chart { display: grid; grid-template-columns: repeat(auto-fill, minmax(22px, 1fr)); gap: 3px; margin-top: 10px; }
+  .adh-cell { aspect-ratio: 1; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--dim); }
+  .adh-cell.a100 { background: var(--green); border-color: var(--green); color: var(--bg); font-weight: 700; }
+  .adh-cell.a80 { background: rgba(127,176,105,0.5); border-color: var(--green); color: var(--bg); }
+  .adh-cell.a60 { background: var(--amber); border-color: var(--amber); color: var(--bg); }
+  .adh-cell.a40 { background: rgba(209,73,91,0.5); border-color: var(--red); color: var(--bg); }
+  .adh-cell.a0 { background: var(--red); border-color: var(--red); color: var(--bg); }
+
+  /* BACKTEST */
+  .drop-zone { border: 1px dashed var(--line); background: var(--bg); padding: 14px; text-align: center; color: var(--dim); cursor: pointer; min-height: 80px; display: flex; align-items: center; justify-content: center; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; position: relative; overflow: hidden; transition: all 0.15s; }
+  .drop-zone:hover { border-color: var(--ink); color: var(--ink); }
+  .drop-zone.dragover { border-color: var(--amber); background: rgba(230,180,80,0.05); color: var(--amber); }
+  .drop-zone img { max-width: 100%; max-height: 120px; display: block; }
+  .btn-ghost { background: transparent; border: 1px solid var(--line); color: var(--dim); padding: 6px 10px; font-family: inherit; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; width: 100%; transition: all 0.15s; }
+  .btn-ghost:hover { color: var(--ink); border-color: var(--ink); }
+  .bt-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; padding: 20px; border: 1px solid var(--line); background: var(--panel); }
+  .bt-summary .k { font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+  .bt-summary .v { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; }
+  .bt-summary .v.green { color: var(--green); }
+  .bt-summary .v.red { color: var(--red); }
+  .bt-list { display: flex; flex-direction: column; gap: 12px; }
+  .bt-entry { display: grid; grid-template-columns: 120px 80px 1fr 100px auto; gap: 16px; padding: 14px; background: var(--panel); border: 1px solid var(--line); align-items: center; transition: all 0.15s; }
+  .bt-entry:hover { border-color: var(--ink); }
+  .bt-entry .bt-date { font-size: 11px; color: var(--dim); }
+  .bt-entry .bt-date .d { color: var(--ink); font-weight: 700; font-size: 13px; }
+  .bt-entry .bt-thumb { width: 80px; height: 60px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase; }
+  .bt-entry .bt-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .bt-entry .bt-body { font-size: 12px; color: var(--ink); }
+  .bt-entry .bt-body .meta { font-size: 10px; color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px; }
+  .bt-entry .bt-body .meta span { margin-right: 14px; }
+  .bt-entry .bt-pts { text-align: right; }
+  .bt-entry .bt-pts .pts { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; }
+  .bt-entry .bt-pts .pts.pos { color: var(--green); }
+  .bt-entry .bt-pts .pts.neg { color: var(--red); }
+  .bt-entry .bt-pts .r { font-size: 10px; color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px; }
+  .bt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .bt-grid-card { background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
+  .bt-grid-card .thumb { aspect-ratio: 16/10; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; color: var(--dim); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
+  .bt-grid-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .bt-grid-card .body { padding: 12px; }
+  .bt-grid-card .body .hd { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .bt-grid-card .body .date { font-size: 10px; color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase; }
+  .bt-grid-card .body .pts { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; }
+  .bt-grid-card .body .pts.pos { color: var(--green); }
+  .bt-grid-card .body .pts.neg { color: var(--red); }
+  .bt-grid-card .body .notes { font-size: 11px; color: var(--dim); margin-top: 4px; line-height: 1.4; max-height: 40px; overflow: hidden; }
+  .stale-tag { display: inline-block; font-size: 9px; padding: 2px 6px; background: var(--amber); color: var(--bg); font-weight: 700; letter-spacing: 0.15em; margin-left: 6px; }
+
+  /* LIGHTBOX */
+  .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 200; display: none; align-items: center; justify-content: center; padding: 40px; cursor: zoom-out; }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 100%; border: 1px solid var(--line); }
+  .lightbox .lb-close { position: absolute; top: 20px; right: 24px; color: var(--ink); font-size: 24px; background: transparent; border: none; cursor: pointer; font-family: inherit; }
+
+  /* TOAST */
+  .toast { position: fixed; top: 24px; right: 24px; background: var(--panel); border: 1px solid var(--line); padding: 12px 20px; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; z-index: 100; transform: translateX(120%); transition: transform 0.25s ease; max-width: 360px; }
+  .toast.show { transform: translateX(0); }
+  .toast.ok { border-color: var(--green); color: var(--green); }
+  .toast.err { border-color: var(--red); color: var(--red); }
+
+  /* MODAL */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal.show { display: flex; }
+  .modal-body { background: var(--panel); border: 1px solid var(--line); padding: 30px; max-width: 500px; width: 100%; }
+  .modal-body h3 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+  .modal-body p { font-size: 12px; color: var(--dim); margin-bottom: 16px; line-height: 1.5; }
+  .modal-body input, .modal-body textarea { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 13px; padding: 10px 12px; margin-bottom: 12px; }
+  .modal-body textarea { min-height: 200px; font-family: 'JetBrains Mono', monospace; font-size: 11px; resize: vertical; }
+
+  .colophon { border-top: 3px double var(--line); margin-top: 60px; padding: 20px 0; display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 10px; color: var(--dim); letter-spacing: 0.2em; text-transform: uppercase; }
+  .colophon .c { text-align: center; }
+  .colophon .r { text-align: right; }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--dim); font-style: italic; }
+  .empty .glyph { font-family: 'Fraunces', serif; font-size: 80px; font-weight: 300; color: var(--line); line-height: 1; margin-bottom: 16px; }
+
+  .sys-bar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding: 12px 0; margin-top: 24px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+  .sys-bar button { background: transparent; border: none; color: var(--dim); font-family: inherit; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; padding: 4px 8px; }
+  .sys-bar button:hover { color: var(--red); }
+
+  @media (max-width: 900px) {
+    .grid-2, .grid-3, .grid-4, .form-grid, .pos-grid, .exit-monitors, .bt-summary { grid-template-columns: 1fr; }
+    .masthead { grid-template-columns: 1fr; text-align: center; }
+    .masthead .left, .masthead .right { text-align: center; }
+    .brand { font-size: 32px; }
+    .checklist-hdr { grid-template-columns: 1fr; gap: 12px; }
+    .gate { grid-template-columns: 1fr; text-align: center; }
+    .gate-fill { width: 100%; }
+    .tab { font-size: 9px; letter-spacing: 0.15em; padding: 10px 4px; }
+    .tab .n { display: none; }
+    .bt-entry { grid-template-columns: 1fr; gap: 8px; }
+    .setup-choices { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN (shown on first run or reset) -->
+<div class="setup-screen" id="setupScreen" style="display:none;">
+  <div class="setup-card" id="setupCard">
+    <!-- content injected by JS -->
+  </div>
+</div>
+
+<div class="shell" id="mainShell" style="display:none;">
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div class="left">No. 001 &nbsp;·&nbsp; Private Edition</div>
+    <div>
+      <div class="brand">The <em>Discretionary</em> Ledger</div>
+      <div class="subhead">A Working Journal for Manual Execution</div>
+    </div>
+    <div class="right" id="dateStamp">—</div>
+  </div>
+
+  <div class="rulebar">
+    <span class="live" id="sessionStatus">Session Offline</span>
+    <span id="tradeCountBar">Trades Today · 0</span>
+    <span class="sync-indicator" id="syncIndicator" title="Click to view sync status">
+      <span class="sync-dot local" id="syncDot"></span>
+      <span id="syncText">Local Only</span>
+    </span>
+    <span id="rulebarClock">—</span>
+  </div>
+
+  <!-- STRATEGY PICKER -->
+  <div class="strategy-bar">
+    <label>Strategy</label>
+    <select class="strategy-select" id="strategySelect"></select>
+    <div class="strategy-actions">
+      <button id="newStrategyBtn">+ New</button>
+      <button id="renameStrategyBtn">Rename</button>
+      <button id="duplicateStrategyBtn">Duplicate</button>
+      <button class="danger" id="deleteStrategyBtn">Delete</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-panel="live"><span class="n">01</span>The Floor</button>
+    <button class="tab" data-panel="rules"><span class="n">02</span>Rulebook</button>
+    <button class="tab" data-panel="log"><span class="n">03</span>Ledger</button>
+    <button class="tab" data-panel="stats"><span class="n">04</span>Post-Mortem</button>
+    <button class="tab" data-panel="backtest"><span class="n">05</span>Backtest</button>
+    <button class="tab" data-panel="settings"><span class="n">06</span>Settings</button>
+  </div>
+
+  <!-- PANEL 01: FLOOR -->
+  <div class="panel active" id="panel-live">
+    <div id="openPosContainer"></div>
+    <div id="guardrailBanner"></div>
+
+    <div class="checklist-hdr">
+      <div>
+        <div class="side-select">
+          <button class="side-btn long active" data-side="long">Long Setup</button>
+          <button class="side-btn short" data-side="short">Short Setup</button>
+        </div>
+      </div>
+      <div>
+        <div class="clock" id="bigClock">—</div>
+        <div class="clock-label">Chicago · CST</div>
+      </div>
+      <div class="window-state">
+        <div>Session</div>
+        <div class="v" id="windowState">—</div>
+      </div>
+    </div>
+
+    <div id="checklistItems"></div>
+
+    <div class="gate" id="gateBanner">
+      <div>
+        <div class="gate-status" id="gateStatus">Assemble Evidence</div>
+        <div class="gate-sub" id="gateSub">All conditions must clear before entry</div>
+      </div>
+      <div>
+        <div class="gate-fill" id="gateFill"><div class="gate-fill-bar" id="gateBar" style="width:0%"></div></div>
+        <div class="gate-count" id="gateCount">0 / 0</div>
+      </div>
+    </div>
+
+    <div class="entry-form" id="entryForm" style="display:none">
+      <div class="entry-form-hdr">Commit the Position</div>
+      <div class="form-grid">
+        <div class="form-field"><label>Instrument</label><input type="text" id="f_instrument" value="NQ"></div>
+        <div class="form-field"><label>Entry Price</label><input type="number" id="f_entry" step="0.25"></div>
+        <div class="form-field"><label>Stop (Hard)</label><input type="number" id="f_stop" step="0.25"></div>
+        <div class="form-field"><label>Contracts</label><input type="number" id="f_qty" step="1" value="1"></div>
+      </div>
+      <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
+        <div class="form-field"><label>Context / Notes</label><textarea id="f_notes" placeholder="One line on the setup."></textarea></div>
+        <div class="form-field"><label>Conviction (1–5)</label><input type="number" id="f_conv" min="1" max="5" value="3"></div>
+      </div>
+      <div style="display:flex; gap:12px; justify-content:flex-end;">
+        <button class="btn-secondary" id="cancelEntry">Cancel</button>
+        <button class="btn-primary" id="commitEntry">Arm &amp; Log Entry →</button>
+      </div>
+    </div>
+
+    <div class="sys-bar">
+      <span>System · Checklist resets at midnight CST</span>
+      <button id="manualReset">Reset Checklist</button>
+    </div>
+  </div>
+
+  <!-- PANEL 02: RULEBOOK -->
+  <div class="panel" id="panel-rules">
+    <div class="grid-2">
+      <div class="rules-col card">
+        <h3>Long Protocol <span class="tag">/L</span></h3>
+        <div class="mini">Click ⏲ on a rule to attach time conditions (CST).</div>
+        <div class="rule-section">
+          <div class="rule-section-hdr">Entry Conditions</div>
+          <div id="longEntryRules"></div>
+          <button class="add-rule" data-add="longEntry">+ Add Entry Rule</button>
+        </div>
+        <div class="rule-section">
+          <div class="rule-section-hdr">Exit Triggers</div>
+          <div id="longExitRules"></div>
+          <button class="add-rule" data-add="longExit">+ Add Exit Rule</button>
+        </div>
+      </div>
+      <div class="rules-col card">
+        <h3>Short Protocol <span class="tag">/S</span></h3>
+        <div class="mini">Mirror image.</div>
+        <div class="rule-section">
+          <div class="rule-section-hdr">Entry Conditions</div>
+          <div id="shortEntryRules"></div>
+          <button class="add-rule" data-add="shortEntry">+ Add Entry Rule</button>
+        </div>
+        <div class="rule-section">
+          <div class="rule-section-hdr">Exit Triggers</div>
+          <div id="shortExitRules"></div>
+          <button class="add-rule" data-add="shortExit">+ Add Exit Rule</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <div class="card-title"><span>Risk · Sizing · Guardrails</span><span class="idx">R</span></div>
+      <div class="form-grid">
+        <div class="form-field"><label>Account Equity ($)</label><input type="number" id="r_equity"></div>
+        <div class="form-field"><label>Risk per Trade (%)</label><input type="number" id="r_risk" step="0.1"></div>
+        <div class="form-field"><label>$ per Point (NQ=20)</label><input type="number" id="r_ppp" step="0.01"></div>
+        <div class="form-field"><label>Max Trades / Day</label><input type="number" id="r_maxtrades"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-field"><label>Daily Loss Limit ($)</label><input type="number" id="r_losslimit" placeholder="e.g. 500"></div>
+        <div class="form-field"><label>Daily Profit Target ($)</label><input type="number" id="r_profittarget" placeholder="e.g. 1000 (optional)"></div>
+        <div class="form-field"><label>Blackout: Start (HH:MM CST)</label><input type="text" id="r_blackoutStart" placeholder="e.g. 12:30"></div>
+        <div class="form-field"><label>Blackout: End (HH:MM CST)</label><input type="text" id="r_blackoutEnd" placeholder="e.g. 13:30"></div>
+      </div>
+      <div class="sys-bar">
+        <span>Changes save automatically. Guardrails lock entries when hit.</span>
+        <span id="ruleSaveStatus">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 03: LEDGER -->
+  <div class="panel" id="panel-log">
+    <div id="logContent"></div>
+  </div>
+
+  <!-- PANEL 04: POST-MORTEM -->
+  <div class="panel" id="panel-stats">
+    <div id="statsContent"></div>
+  </div>
+
+  <!-- PANEL 05: BACKTEST -->
+  <div class="panel" id="panel-backtest">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+      <h2 style="font-family:'Fraunces',serif; font-size:28px; font-weight:900; letter-spacing:-0.01em;">Backtest Log</h2>
+      <div style="font-size:10px; color:var(--dim); letter-spacing:0.2em; text-transform:uppercase;" id="btMeta">— entries</div>
+    </div>
+    <div style="font-size:12px; color:var(--dim); font-style:italic; margin-bottom:24px;" id="btStrategyNote">Historical replays for the current strategy.</div>
+
+    <div class="card" id="btForm">
+      <div class="card-title"><span>Log a Backtest Entry</span><span class="idx">BT</span></div>
+      <div class="form-grid">
+        <div class="form-field"><label>Date</label><input type="date" id="bt_date"></div>
+        <div class="form-field"><label>Side</label><select id="bt_side"><option value="long">Long</option><option value="short">Short</option></select></div>
+        <div class="form-field"><label>Instrument</label><input type="text" id="bt_instrument" value="NQ"></div>
+        <div class="form-field"><label>Points (±)</label><input type="number" id="bt_points" step="0.01" placeholder="e.g. 42.5 or -15"></div>
+      </div>
+      <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+        <div class="form-field"><label>R Multiple (opt)</label><input type="number" id="bt_R" step="0.01"></div>
+        <div class="form-field"><label>Entry Time CST (opt)</label><input type="text" id="bt_time" placeholder="9:35 AM"></div>
+        <div class="form-field"><label>Exit Reason (opt)</label><select id="bt_reason"><option value="">—</option><option value="vwap">VWAP cross-back</option><option value="hard">Hard stop</option><option value="noise">Noise re-entry</option><option value="eod">End of session</option><option value="manual">Manual</option></select></div>
+        <div class="form-field"><label>Tag (opt)</label><input type="text" id="bt_tag" placeholder="e.g. trend-day"></div>
+      </div>
+      <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
+        <div class="form-field"><label>Notes</label><textarea id="bt_notes"></textarea></div>
+        <div class="form-field">
+          <label>Screenshot</label>
+          <div class="drop-zone" id="btDrop">
+            <input type="file" id="bt_image" accept="image/*" style="display:none">
+            <div id="dropText">Click or drop<br><span style="font-size:9px;">image file</span></div>
+            <img id="dropPreview" style="display:none;">
+          </div>
+          <button type="button" class="btn-ghost" id="btPaste" style="margin-top:6px;">📋 Paste from clipboard</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
+        <button class="btn-secondary" id="btClear">Clear Form</button>
+        <button class="btn-primary" id="btCommit">Save Entry →</button>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; border-bottom:1px solid var(--line); padding-bottom:8px;">
+        <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim);">Logged Entries</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn-secondary" id="btExport" style="padding:6px 14px; font-size:10px;">Export CSV</button>
+          <button class="btn-secondary" id="btToggleView" style="padding:6px 14px; font-size:10px;">Grid View</button>
+        </div>
+      </div>
+      <div id="btSummary" style="margin-bottom:20px;"></div>
+      <div id="btEntries"></div>
+    </div>
+  </div>
+
+  <!-- PANEL 06: SETTINGS -->
+  <div class="panel" id="panel-settings">
+    <h2 style="font-family:'Fraunces',serif; font-size:28px; font-weight:900; letter-spacing:-0.01em; margin-bottom:24px;">Settings</h2>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title"><span>Sync · Cross-device</span><span class="idx">S</span></div>
+      <div id="syncStatusDetail"></div>
+      <div style="display:flex; gap:10px; flex-wrap: wrap; margin-top:16px;">
+        <button class="btn-secondary" id="viewSyncKey">View My Sync Key</button>
+        <button class="btn-secondary" id="changeSyncKey">Use Different Sync Key</button>
+        <button class="btn-secondary" id="forceSyncBtn">Force Sync Now</button>
+        <button class="btn-danger" id="resetAllBtn">Reset Everything</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title"><span>Backup · Restore</span><span class="idx">B</span></div>
+      <p style="font-size:12px; color:var(--dim); margin-bottom:16px; line-height:1.5;">Export a full JSON snapshot of all strategies, rules, trades, and backtest metadata. Use Import on another device to migrate.</p>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-secondary" id="exportAllBtn">Export JSON</button>
+        <button class="btn-secondary" id="importAllBtn">Import JSON</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>About</span><span class="idx">i</span></div>
+      <p style="font-size:12px; color:var(--dim); line-height:1.7;">
+        All times displayed in Central Standard Time.<br>
+        Storage: Supabase backend with localStorage fallback. Your data syncs across devices via your sync key.<br>
+        <span style="color:var(--amber);">Keep your sync key private — it's your only key to your data.</span><br>
+        Version 2.0
+      </p>
+    </div>
+  </div>
+
+  <div class="colophon">
+    <div>Typeset in Fraunces &amp; JetBrains Mono</div>
+    <div class="c">— Discipline is the trade —</div>
+    <div class="r">v2.0 · Cross-device sync</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose">✕</button>
+  <img id="lbImg" alt="">
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-body" id="modalBody"></div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// ============================================================
+// SUPABASE CONFIG
+// ============================================================
+const SUPABASE_URL = 'https://wtjkmzosnpewxudzmyrh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0amttem9zbnBld3h1ZHpteXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzEwNjksImV4cCI6MjA5MjU0NzA2OX0.NFbay28JKg1uTFSzBMf_my6JcYb8dqKFN1QiPvZzVGE';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// CORE STATE
+// ============================================================
+const DEFAULT_RISK = { equity: 50000, risk: 1.0, ppp: 20, maxtrades: 2, losslimit: 0, profittarget: 0, blackoutStart: '', blackoutEnd: '' };
+
+function newStrategy(name) {
+  return {
+    id: 'STR' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,3).toUpperCase(),
+    name,
+    rules: {
+      longEntry: [], longExit: [], shortEntry: [], shortExit: [],
+      conditions: {}, // ruleId -> { type, start, end, ... }
+      risk: { ...DEFAULT_RISK }
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+}
+
+let state = {
+  syncKey: null,
+  strategies: [],
+  activeStrategyId: null,
+  checks: { long: {}, short: {} },
+  side: 'long',
+  openTrade: null,
+  trades: [],
+  backtests: [],
+  backtestView: 'list',
+  date: getCSTDateKey(),
+  syncStatus: 'local', // local | syncing | synced | error
+  lastSyncTime: null,
+  lockoutOverride: false // user ack'd they broke the loss limit
+};
+
+// ============================================================
+// TIME UTILS (CST)
+// ============================================================
+function getCST() {
+  const now = new Date();
+  const cstStr = now.toLocaleString('en-US', { timeZone: 'America/Chicago', hour12: false });
+  const d = new Date(cstStr);
+  return {
+    date: d,
+    dateKey: d.toISOString().slice(0, 10),
+    h: d.getHours(),
+    m: d.getMinutes(),
+    s: d.getSeconds(),
+    minutes: d.getHours() * 60 + d.getMinutes()
+  };
+}
+function getCSTDateKey() { return getCST().dateKey; }
+function parseHHMM(str) {
+  if (!str || !/^\d{1,2}:\d{2}$/.test(str)) return null;
+  const [h, m] = str.split(':').map(Number);
+  if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+  return h * 60 + m;
+}
+function formatHHMM(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+function formatClockAmPm(h, m) {
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  let h12 = h % 12; if (h12 === 0) h12 = 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+// ============================================================
+// TOAST / MODAL
+// ============================================================
+function toast(msg, kind='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + kind;
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+function showModal(html) {
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modal').classList.add('show');
+}
+function hideModal() { document.getElementById('modal').classList.remove('show'); }
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') hideModal(); });
+
+// ============================================================
+// SYNC / STORAGE
+// ============================================================
+function generateSyncKey() {
+  // 4 groups of 4 chars, alphanumeric
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const group = () => Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  return [group(), group(), group(), group()].join('-');
+}
+function validateSyncKey(k) {
+  return /^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(k);
+}
+function packState() {
+  return {
+    strategies: state.strategies,
+    activeStrategyId: state.activeStrategyId,
+    checks: state.checks,
+    side: state.side,
+    openTrade: state.openTrade,
+    trades: state.trades,
+    backtests: state.backtests.map(({image, ...rest}) => rest),
+    date: state.date,
+    lockoutOverride: state.lockoutOverride,
+    savedAt: new Date().toISOString()
+  };
+}
+function unpackState(data) {
+  if (!data) return;
+  state.strategies = data.strategies || [];
+  state.activeStrategyId = data.activeStrategyId || (state.strategies[0]?.id);
+  state.checks = data.checks || { long:{}, short:{} };
+  state.side = data.side || 'long';
+  state.openTrade = data.openTrade || null;
+  state.trades = data.trades || [];
+  state.backtests = (data.backtests || []).map(b => ({ ...b, image: null }));
+  state.date = data.date || getCSTDateKey();
+  state.lockoutOverride = data.lockoutOverride || false;
+}
+
+let saveTimer = null;
+function queueSave() {
+  clearTimeout(saveTimer);
+  updateSyncIndicator('syncing');
+  saveTimer = setTimeout(doSync, 800);
+}
+async function doSync() {
+  if (!state.syncKey) { updateSyncIndicator('local'); return; }
+  const payload = packState();
+  // localStorage always
+  try { localStorage.setItem('ledger:' + state.syncKey, JSON.stringify(payload)); } catch {}
+  // supabase
+  try {
+    const { error } = await supabase
+      .from('ledger_data')
+      .upsert({ sync_key: state.syncKey, data: payload, updated_at: new Date().toISOString() });
+    if (error) throw error;
+    state.lastSyncTime = new Date();
+    updateSyncIndicator('synced');
+  } catch (e) {
+    console.error('sync error', e);
+    updateSyncIndicator('error');
+  }
+}
+async function pullRemote() {
+  if (!state.syncKey) return null;
+  try {
+    const { data, error } = await supabase
+      .from('ledger_data').select('data, updated_at')
+      .eq('sync_key', state.syncKey).maybeSingle();
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    console.error('pull error', e);
+    return null;
+  }
+}
+async function uploadImage(id, base64) {
+  if (!state.syncKey) return false;
+  try {
+    const { error } = await supabase
+      .from('ledger_images')
+      .upsert({ id, sync_key: state.syncKey, image_data: base64 });
+    if (error) throw error;
+    return true;
+  } catch (e) { console.error('img upload', e); return false; }
+}
+async function fetchImage(id) {
+  if (!state.syncKey) return null;
+  // try localStorage first
+  const local = localStorage.getItem('ledger:img:' + id);
+  if (local) return local;
+  try {
+    const { data, error } = await supabase
+      .from('ledger_images').select('image_data')
+      .eq('id', id).eq('sync_key', state.syncKey).maybeSingle();
+    if (error) throw error;
+    if (data?.image_data) {
+      try { localStorage.setItem('ledger:img:' + id, data.image_data); } catch {}
+      return data.image_data;
+    }
+    return null;
+  } catch { return null; }
+}
+async function deleteImage(id) {
+  localStorage.removeItem('ledger:img:' + id);
+  if (!state.syncKey) return;
+  try {
+    await supabase.from('ledger_images').delete().eq('id', id).eq('sync_key', state.syncKey);
+  } catch {}
+}
+
+function updateSyncIndicator(status) {
+  state.syncStatus = status;
+  const dot = document.getElementById('syncDot');
+  const text = document.getElementById('syncText');
+  if (!dot) return;
+  dot.className = 'sync-dot ' + status;
+  const map = { synced: 'Synced', syncing: 'Syncing…', error: 'Sync Error', local: 'Local Only' };
+  text.textContent = map[status] || status;
+}
+
+// ============================================================
+// SETUP SCREEN
+// ============================================================
+function showSetupScreen() {
+  document.getElementById('setupScreen').style.display = 'flex';
+  document.getElementById('mainShell').style.display = 'none';
+  renderSetupWelcome();
+}
+function hideSetupScreen() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('mainShell').style.display = 'block';
+}
+function renderSetupWelcome() {
+  document.getElementById('setupCard').innerHTML = `
+    <h1>The <em>Discretionary</em> Ledger</h1>
+    <div class="sub">First-time setup · Cross-device sync</div>
+    <p>Your data can sync across every device via a <strong>Sync Key</strong> — a 16-character code that acts as both your identity and your password. No email, no login.</p>
+    <p class="caveat">Keep your sync key private. Anyone with it can read and modify your data. Write it down, save it to your phone's notes, or email it to yourself.</p>
+    <div class="setup-choices">
+      <button class="setup-choice" id="choiceNew">
+        <h3>New User</h3>
+        <p>Generate a fresh sync key and start a clean ledger.</p>
+      </button>
+      <button class="setup-choice" id="choiceExisting">
+        <h3>Returning User</h3>
+        <p>I have a sync key from another device.</p>
+      </button>
+    </div>
+  `;
+  document.getElementById('choiceNew').addEventListener('click', renderSetupNew);
+  document.getElementById('choiceExisting').addEventListener('click', renderSetupExisting);
+}
+function renderSetupNew() {
+  const key = generateSyncKey();
+  document.getElementById('setupCard').innerHTML = `
+    <h1>Your Sync Key</h1>
+    <div class="sub">Save this somewhere safe</div>
+    <p>This is your key to your data. Save it to your phone, a password manager, or email it to yourself. You'll use this exact string on any other device to pull in your data.</p>
+    <div class="sync-key-display" id="keyDisplay">${key}</div>
+    <button class="btn ghost" id="copyKeyBtn" style="width:100%; margin-bottom:16px;">📋 Copy to Clipboard</button>
+    <p class="caveat">If you lose this key there is no recovery. There's no "forgot password" flow — that's the trade-off for not needing an email.</p>
+    <div class="setup-actions">
+      <button class="btn ghost" id="backBtn">Back</button>
+      <button class="btn" id="saveKeyBtn" style="flex:1;">I've Saved It — Continue</button>
+    </div>
+  `;
+  document.getElementById('copyKeyBtn').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(key); toast('Key copied'); }
+    catch { toast('Copy failed — select and copy manually', 'err'); }
+  });
+  document.getElementById('backBtn').addEventListener('click', renderSetupWelcome);
+  document.getElementById('saveKeyBtn').addEventListener('click', async () => {
+    state.syncKey = key;
+    localStorage.setItem('ledger:current_key', key);
+    // create default strategy
+    const s = newStrategy('Default Strategy');
+    state.strategies = [s];
+    state.activeStrategyId = s.id;
+    await doSync();
+    hideSetupScreen();
+    bootApp();
+    toast('Welcome. Head to Rulebook to define your rules.');
+  });
+}
+function renderSetupExisting() {
+  document.getElementById('setupCard').innerHTML = `
+    <h1>Enter Sync Key</h1>
+    <div class="sub">Pull data from another device</div>
+    <p>Paste the 16-character sync key you generated on another device. Format: <code style="color:var(--amber);">XXXX-XXXX-XXXX-XXXX</code></p>
+    <input type="text" id="keyInput" placeholder="ABCD-EFGH-IJKL-MNOP" style="text-align:center; letter-spacing:0.1em; font-size:16px; text-transform:uppercase;">
+    <div class="setup-actions">
+      <button class="btn ghost" id="backBtn">Back</button>
+      <button class="btn" id="loadKeyBtn" style="flex:1;">Load My Data →</button>
+    </div>
+    <div id="loadStatus" style="margin-top:16px; font-size:11px; color:var(--dim); text-align:center;"></div>
+  `;
+  document.getElementById('backBtn').addEventListener('click', renderSetupWelcome);
+  const input = document.getElementById('keyInput');
+  input.addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
+  document.getElementById('loadKeyBtn').addEventListener('click', async () => {
+    let key = input.value.trim().toUpperCase();
+    if (!validateSyncKey(key)) { document.getElementById('loadStatus').textContent = 'Invalid format. Must be XXXX-XXXX-XXXX-XXXX.'; return; }
+    document.getElementById('loadStatus').textContent = 'Checking server...';
+    state.syncKey = key;
+    const remote = await pullRemote();
+    if (remote?.data) {
+      unpackState(remote.data);
+      localStorage.setItem('ledger:current_key', key);
+      localStorage.setItem('ledger:' + key, JSON.stringify(remote.data));
+      hideSetupScreen();
+      bootApp();
+      toast('Data loaded from server');
+    } else {
+      document.getElementById('loadStatus').textContent = 'No data found for that key. Starting fresh with this key.';
+      setTimeout(async () => {
+        localStorage.setItem('ledger:current_key', key);
+        const s = newStrategy('Default Strategy');
+        state.strategies = [s];
+        state.activeStrategyId = s.id;
+        await doSync();
+        hideSetupScreen();
+        bootApp();
+      }, 1500);
+    }
+  });
+}
+
+// ============================================================
+// STRATEGY MANAGEMENT
+// ============================================================
+function activeStrategy() {
+  return state.strategies.find(s => s.id === state.activeStrategyId) || state.strategies[0];
+}
+function activeRules() {
+  const s = activeStrategy();
+  if (!s) return { longEntry:[], longExit:[], shortEntry:[], shortExit:[], conditions:{}, risk: DEFAULT_RISK };
+  // backfill
+  s.rules = s.rules || {};
+  s.rules.longEntry = s.rules.longEntry || [];
+  s.rules.longExit = s.rules.longExit || [];
+  s.rules.shortEntry = s.rules.shortEntry || [];
+  s.rules.shortExit = s.rules.shortExit || [];
+  s.rules.conditions = s.rules.conditions || {};
+  s.rules.risk = { ...DEFAULT_RISK, ...(s.rules.risk || {}) };
+  return s.rules;
+}
+function ruleId(bucket, idx) {
+  const s = activeStrategy();
+  return `${s.id}:${bucket}:${idx}`;
+}
+function renderStrategyPicker() {
+  const sel = document.getElementById('strategySelect');
+  sel.innerHTML = state.strategies.map(s =>
+    `<option value="${s.id}" ${s.id === state.activeStrategyId ? 'selected' : ''}>${escapeHtml(s.name)}</option>`
+  ).join('');
+}
+document.getElementById('strategySelect').addEventListener('change', e => {
+  state.activeStrategyId = e.target.value;
+  state.checks = { long:{}, short:{} };
+  queueSave();
+  rerenderAll();
+});
+document.getElementById('newStrategyBtn').addEventListener('click', () => {
+  const name = prompt('New strategy name:');
+  if (!name) return;
+  const s = newStrategy(name.trim());
+  state.strategies.push(s);
+  state.activeStrategyId = s.id;
+  queueSave();
+  rerenderAll();
+  toast(`Created "${name}"`);
+});
+document.getElementById('renameStrategyBtn').addEventListener('click', () => {
+  const s = activeStrategy();
+  if (!s) return;
+  const name = prompt('Rename strategy:', s.name);
+  if (!name) return;
+  s.name = name.trim();
+  s.updatedAt = new Date().toISOString();
+  queueSave();
+  renderStrategyPicker();
+});
+document.getElementById('duplicateStrategyBtn').addEventListener('click', () => {
+  const s = activeStrategy();
+  if (!s) return;
+  const copy = JSON.parse(JSON.stringify(s));
+  copy.id = 'STR' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,3).toUpperCase();
+  copy.name = s.name + ' (copy)';
+  copy.createdAt = new Date().toISOString();
+  state.strategies.push(copy);
+  state.activeStrategyId = copy.id;
+  queueSave();
+  rerenderAll();
+  toast('Duplicated');
+});
+document.getElementById('deleteStrategyBtn').addEventListener('click', () => {
+  if (state.strategies.length <= 1) { toast('Cannot delete the only strategy', 'err'); return; }
+  const s = activeStrategy();
+  if (!confirm(`Delete "${s.name}"? This also removes its rules. Trades/backtests remain but will show as "Unknown Strategy."`)) return;
+  state.strategies = state.strategies.filter(x => x.id !== s.id);
+  state.activeStrategyId = state.strategies[0].id;
+  state.checks = { long:{}, short:{} };
+  queueSave();
+  rerenderAll();
+});
+
+// ============================================================
+// TABS
+// ============================================================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+    if (tab.dataset.panel === 'log') renderLog();
+    if (tab.dataset.panel === 'stats') renderStats();
+    if (tab.dataset.panel === 'rules') renderRules();
+    if (tab.dataset.panel === 'backtest') renderBacktest();
+    if (tab.dataset.panel === 'settings') renderSettings();
+  });
+});
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function autosize(ta) { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
+
+// ============================================================
+// RULES
+// ============================================================
+function renderRules() {
+  const r = activeRules();
+  renderRuleList('longEntryRules', r.longEntry, 'longEntry', r.conditions);
+  renderRuleList('longExitRules', r.longExit, 'longExit', r.conditions);
+  renderRuleList('shortEntryRules', r.shortEntry, 'shortEntry', r.conditions);
+  renderRuleList('shortExitRules', r.shortExit, 'shortExit', r.conditions);
+  document.getElementById('r_equity').value = r.risk.equity || '';
+  document.getElementById('r_risk').value = r.risk.risk || '';
+  document.getElementById('r_ppp').value = r.risk.ppp || '';
+  document.getElementById('r_maxtrades').value = r.risk.maxtrades || '';
+  document.getElementById('r_losslimit').value = r.risk.losslimit || '';
+  document.getElementById('r_profittarget').value = r.risk.profittarget || '';
+  document.getElementById('r_blackoutStart').value = r.risk.blackoutStart || '';
+  document.getElementById('r_blackoutEnd').value = r.risk.blackoutEnd || '';
+}
+function renderRuleList(containerId, arr, bucket, conditions) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  if (arr.length === 0) {
+    el.innerHTML = '<div style="color:var(--dim); font-style:italic; font-size:11px; padding:8px 0;">No rules yet.</div>';
+    return;
+  }
+  arr.forEach((rule, i) => {
+    const rid = ruleId(bucket, i);
+    const cond = conditions[rid];
+    const row = document.createElement('div');
+    row.className = 'rule-row';
+    row.innerHTML = `
+      <div class="rule-num">${String(i+1).padStart(2,'0')}</div>
+      <textarea class="rule-input" rows="1" data-bucket="${bucket}" data-idx="${i}">${escapeHtml(rule)}</textarea>
+      <button class="rule-cond ${cond ? 'active' : ''}" data-bucket="${bucket}" data-idx="${i}" title="Attach time condition">⏲</button>
+      <button class="rule-del" data-bucket="${bucket}" data-idx="${i}" title="Delete">✕</button>
+      ${cond ? renderCondEditor(rid, cond) : ''}
+    `;
+    el.appendChild(row);
+  });
+  el.querySelectorAll('.rule-input').forEach(inp => {
+    autosize(inp);
+    inp.addEventListener('input', e => {
+      const b = e.target.dataset.bucket, i = parseInt(e.target.dataset.idx);
+      activeRules()[b][i] = e.target.value;
+      autosize(e.target);
+      queueSave();
+      markStaleBacktests();
+    });
+  });
+  el.querySelectorAll('.rule-del').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const b = e.target.dataset.bucket, i = parseInt(e.target.dataset.idx);
+      const rid = ruleId(b, i);
+      activeRules()[b].splice(i, 1);
+      // reindex conditions
+      const r = activeRules();
+      const newConds = {};
+      r[b].forEach((_, newIdx) => {
+        const oldRid = ruleId(b, newIdx >= i ? newIdx + 1 : newIdx);
+        const newRid = ruleId(b, newIdx);
+        if (r.conditions[oldRid]) newConds[newRid] = r.conditions[oldRid];
+      });
+      // keep conditions from other buckets
+      Object.keys(r.conditions).forEach(k => { if (!k.includes(`:${b}:`)) newConds[k] = r.conditions[k]; });
+      r.conditions = newConds;
+      queueSave();
+      markStaleBacktests();
+      renderRules(); renderChecklist();
+    });
+  });
+  el.querySelectorAll('.rule-cond').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const b = e.target.dataset.bucket, i = parseInt(e.target.dataset.idx);
+      const rid = ruleId(b, i);
+      const r = activeRules();
+      if (r.conditions[rid]) {
+        delete r.conditions[rid];
+      } else {
+        r.conditions[rid] = { type: 'active', start: '09:00', end: '13:00' };
+      }
+      queueSave();
+      markStaleBacktests();
+      renderRules();
+    });
+  });
+  // condition editors
+  el.querySelectorAll('[data-cond-edit]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const rid = e.target.dataset.condEdit;
+      const field = e.target.dataset.field;
+      activeRules().conditions[rid][field] = e.target.value;
+      queueSave();
+      markStaleBacktests();
+      renderChecklist();
+    });
+  });
+}
+function renderCondEditor(rid, cond) {
+  return `
+    <div class="rule-conditions">
+      <div class="cond-row">
+        <label>Type</label>
+        <select data-cond-edit="${rid}" data-field="type">
+          <option value="active" ${cond.type==='active'?'selected':''}>Active Window</option>
+          <option value="blackout" ${cond.type==='blackout'?'selected':''}>Blackout Window</option>
+          <option value="modifier" ${cond.type==='modifier'?'selected':''}>Modifier Note</option>
+        </select>
+      </div>
+      <div class="cond-row">
+        <label>Start (CST)</label>
+        <input type="text" data-cond-edit="${rid}" data-field="start" value="${cond.start||''}" placeholder="09:00">
+        <input type="text" data-cond-edit="${rid}" data-field="end" value="${cond.end||''}" placeholder="13:00">
+      </div>
+      <div class="cond-hint">
+        ${cond.type === 'active' ? '✓ Rule only applies in this window (hidden outside).' : ''}
+        ${cond.type === 'blackout' ? '✗ Blocks entry entirely during this window.' : ''}
+        ${cond.type === 'modifier' ? '✎ Rule shown with amber highlight in this window.' : ''}
+      </div>
+    </div>
+  `;
+}
+document.querySelectorAll('.add-rule').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const b = btn.dataset.add;
+    activeRules()[b].push('');
+    queueSave();
+    markStaleBacktests();
+    renderRules(); renderChecklist();
+    setTimeout(() => {
+      const inputs = document.querySelectorAll(`#${b}Rules .rule-input`);
+      if (inputs.length) inputs[inputs.length-1].focus();
+    }, 10);
+  });
+});
+['r_equity','r_risk','r_ppp','r_maxtrades','r_losslimit','r_profittarget','r_blackoutStart','r_blackoutEnd'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    const k = id.slice(2);
+    const r = activeRules();
+    if (['blackoutStart','blackoutEnd'].includes(k)) r.risk[k] = e.target.value;
+    else r.risk[k] = parseFloat(e.target.value) || 0;
+    queueSave();
+    document.getElementById('ruleSaveStatus').textContent = 'Saving…';
+    setTimeout(() => { document.getElementById('ruleSaveStatus').textContent = 'Saved ✓'; setTimeout(() => document.getElementById('ruleSaveStatus').textContent = '—', 1200); }, 400);
+  });
+});
+
+// ============================================================
+// GUARDRAILS
+// ============================================================
+function computeGuardrails() {
+  const r = activeRules();
+  const today = getCSTDateKey();
+  const todayTrades = state.trades.filter(t => t.date === today && t.strategyId === state.activeStrategyId);
+  const todayPnl = todayTrades.reduce((s,t) => s + (t.pnlDollars||0), 0);
+  const losslimit = parseFloat(r.risk.losslimit) || 0;
+  const maxtrades = parseInt(r.risk.maxtrades) || 0;
+  const profittarget = parseFloat(r.risk.profittarget) || 0;
+  const cst = getCST();
+  const bStart = parseHHMM(r.risk.blackoutStart);
+  const bEnd = parseHHMM(r.risk.blackoutEnd);
+  const inBlackout = bStart != null && bEnd != null && cst.minutes >= bStart && cst.minutes < bEnd;
+
+  return {
+    todayPnl,
+    todayCount: todayTrades.length,
+    lossLimitHit: losslimit > 0 && todayPnl <= -Math.abs(losslimit),
+    maxTradesHit: maxtrades > 0 && todayTrades.length >= maxtrades,
+    profitTargetHit: profittarget > 0 && todayPnl >= profittarget,
+    inBlackout,
+    blackoutEndsAt: bEnd != null ? formatHHMM(bEnd) : null
+  };
+}
+function renderGuardrailBanner() {
+  const g = computeGuardrails();
+  const el = document.getElementById('guardrailBanner');
+  const blocks = [];
+  if (g.lossLimitHit && !state.lockoutOverride) {
+    blocks.push(`<div class="guardrail"><span>⛔ Daily Loss Limit Hit · Entries Locked</span><span class="v">$${g.todayPnl.toFixed(0)}</span></div>`);
+  }
+  if (g.maxTradesHit) {
+    blocks.push(`<div class="guardrail"><span>⛔ Max Trades Reached · No More Today</span><span class="v">${g.todayCount}</span></div>`);
+  }
+  if (g.inBlackout) {
+    blocks.push(`<div class="guardrail warn"><span>⏸ Blackout Window Active · Reopens ${g.blackoutEndsAt} CST</span><span class="v">HOLD</span></div>`);
+  }
+  if (g.profitTargetHit) {
+    blocks.push(`<div class="guardrail warn"><span>✓ Daily Profit Target Hit · Consider Stopping</span><span class="v">+$${g.todayPnl.toFixed(0)}</span></div>`);
+  }
+  if (blocks.length === 0) {
+    const r = activeRules();
+    if (r.risk.losslimit || r.risk.maxtrades) {
+      const ll = r.risk.losslimit ? `Loss limit: $${r.risk.losslimit}` : '';
+      const mt = r.risk.maxtrades ? `Max trades: ${r.risk.maxtrades}` : '';
+      blocks.push(`<div class="guardrail ok"><span>Guardrails Active · ${[ll,mt].filter(Boolean).join(' · ')} · Today: ${g.todayCount} trades, ${g.todayPnl>=0?'+':''}$${g.todayPnl.toFixed(0)}</span><span class="v">OK</span></div>`);
+    }
+  }
+  el.innerHTML = blocks.join('');
+}
+
+// ============================================================
+// CHECKLIST
+// ============================================================
+function isRuleActive(rid, conditions) {
+  const c = conditions[rid];
+  if (!c) return { active: true, blackout: false, modifier: false };
+  const cst = getCST();
+  const start = parseHHMM(c.start);
+  const end = parseHHMM(c.end);
+  if (start == null || end == null) return { active: true, blackout: false, modifier: false };
+  const inWindow = cst.minutes >= start && cst.minutes < end;
+  if (c.type === 'active') return { active: inWindow, blackout: false, modifier: false, cond: c };
+  if (c.type === 'blackout') return { active: true, blackout: inWindow, modifier: false, cond: c };
+  if (c.type === 'modifier') return { active: true, blackout: false, modifier: inWindow, cond: c };
+  return { active: true, blackout: false, modifier: false };
+}
+
+document.querySelectorAll('.side-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    state.side = b.dataset.side;
+    queueSave();
+    renderChecklist();
+  });
+});
+
+function renderChecklist() {
+  document.querySelectorAll('.side-btn').forEach(x => x.classList.toggle('active', x.dataset.side === state.side));
+
+  const r = activeRules();
+  const bucket = state.side === 'long' ? r.longEntry : r.shortEntry;
+  const bucketKey = state.side === 'long' ? 'longEntry' : 'shortEntry';
+  const checks = state.checks[state.side] || {};
+  const el = document.getElementById('checklistItems');
+
+  if (bucket.length === 0 || bucket.every(x => !x.trim())) {
+    el.innerHTML = `<div class="empty"><div class="glyph">∅</div>No ${state.side} rules in "${escapeHtml(activeStrategy()?.name||'this strategy')}".<br><span style="font-size:10px; letter-spacing:0.2em;">Head to the Rulebook tab.</span></div>`;
+    updateGate(0, 0, false);
+    document.getElementById('entryForm').style.display = 'none';
+    renderGuardrailBanner();
+    return;
+  }
+
+  el.innerHTML = '';
+  let total = 0, done = 0, anyBlackout = false;
+  bucket.forEach((rule, i) => {
+    if (!rule.trim()) return;
+    const rid = ruleId(bucketKey, i);
+    const status = isRuleActive(rid, r.conditions);
+    if (status.blackout) anyBlackout = true;
+    if (!status.active) {
+      // hidden from total entirely
+      return;
+    }
+    total++;
+    const isChecked = !!checks[i];
+    if (isChecked) done++;
+    const row = document.createElement('div');
+    let cls = 'check-item';
+    if (isChecked) cls += ' checked';
+    if (state.side === 'short') cls += ' short';
+    if (status.blackout) cls += ' blackout';
+    row.className = cls;
+
+    let badge = '';
+    if (status.blackout) badge = `<span class="cond-badge blackout">BLACKOUT · ${status.cond.start}-${status.cond.end}</span>`;
+    else if (status.modifier) badge = `<span class="cond-badge">ACTIVE NOW · ${status.cond.start}-${status.cond.end}</span>`;
+
+    row.innerHTML = `
+      <div class="check-box">${isChecked ? '✓' : ''}</div>
+      <div class="check-text">${escapeHtml(rule)}${badge}</div>
+      <div class="check-meta">Rule ${String(i+1).padStart(2,'0')}</div>
+    `;
+    row.addEventListener('click', () => {
+      if (status.blackout) { toast('Blackout active — cannot enter', 'err'); return; }
+      state.checks[state.side][i] = !isChecked;
+      queueSave();
+      renderChecklist();
+    });
+    el.appendChild(row);
+  });
+
+  const g = computeGuardrails();
+  const locked = (g.lossLimitHit && !state.lockoutOverride) || g.maxTradesHit || g.inBlackout || anyBlackout;
+  updateGate(done, total, locked, { anyBlackout, ...g });
+
+  if (done === total && total > 0 && !state.openTrade && !locked) {
+    document.getElementById('entryForm').style.display = 'block';
+  } else {
+    document.getElementById('entryForm').style.display = 'none';
+  }
+  renderGuardrailBanner();
+}
+
+function updateGate(done, total, locked, info={}) {
+  const banner = document.getElementById('gateBanner');
+  const statusEl = document.getElementById('gateStatus');
+  const subEl = document.getElementById('gateSub');
+  const fill = document.getElementById('gateFill');
+  const bar = document.getElementById('gateBar');
+  const count = document.getElementById('gateCount');
+
+  const pct = total ? (done / total) * 100 : 0;
+  bar.style.width = pct + '%';
+  count.textContent = `${done} / ${total}`;
+
+  banner.classList.remove('armed', 'short', 'locked');
+  fill.classList.remove('full', 'short');
+  statusEl.classList.remove('armed', 'short', 'locked');
+
+  if (locked) {
+    banner.classList.add('locked');
+    statusEl.classList.add('locked');
+    statusEl.textContent = 'Entries Locked';
+    let reason = 'Guardrail triggered';
+    if (info.lossLimitHit) reason = 'Daily loss limit hit';
+    else if (info.maxTradesHit) reason = 'Max trades reached';
+    else if (info.inBlackout) reason = 'Blackout window active';
+    else if (info.anyBlackout) reason = 'A rule is in blackout';
+    subEl.textContent = reason;
+  } else if (total === 0) {
+    statusEl.textContent = 'No Rules';
+    subEl.textContent = 'Define your protocol in the Rulebook';
+  } else if (done === total) {
+    banner.classList.add('armed');
+    fill.classList.add('full');
+    if (state.side === 'short') { banner.classList.add('short'); fill.classList.add('short'); }
+    statusEl.textContent = state.side === 'long' ? 'Long · Armed' : 'Short · Armed';
+    statusEl.classList.add('armed');
+    if (state.side === 'short') statusEl.classList.add('short');
+    subEl.textContent = 'Every condition cleared — commit below';
+  } else {
+    statusEl.textContent = 'Assemble Evidence';
+    subEl.textContent = `${total - done} condition${total-done===1?'':'s'} remaining`;
+  }
+}
+
+document.getElementById('manualReset').addEventListener('click', () => {
+  state.checks = { long:{}, short:{} };
+  queueSave();
+  renderChecklist();
+  toast('Checklist reset');
+});
+document.getElementById('cancelEntry').addEventListener('click', () => {
+  state.checks = { long:{}, short:{} };
+  queueSave();
+  renderChecklist();
+});
+
+document.getElementById('commitEntry').addEventListener('click', async () => {
+  const entry = parseFloat(document.getElementById('f_entry').value);
+  const stop = parseFloat(document.getElementById('f_stop').value);
+  const qty = parseFloat(document.getElementById('f_qty').value) || 1;
+  const instrument = document.getElementById('f_instrument').value.trim() || 'NQ';
+  const notes = document.getElementById('f_notes').value.trim();
+  const conv = parseInt(document.getElementById('f_conv').value) || 3;
+
+  if (!entry || !stop) { toast('Entry & stop required', 'err'); return; }
+
+  const r = activeRules();
+  const riskPoints = Math.abs(entry - stop);
+  const ppp = r.risk.ppp || 20;
+  const riskDollars = riskPoints * ppp * qty;
+
+  const bucket = state.side === 'long' ? r.longEntry : r.shortEntry;
+  const bucketKey = state.side === 'long' ? 'longEntry' : 'shortEntry';
+  const checks = state.checks[state.side] || {};
+  let total = 0, checked = 0;
+  bucket.forEach((rule, i) => {
+    if (!rule.trim()) return;
+    const rid = ruleId(bucketKey, i);
+    const status = isRuleActive(rid, r.conditions);
+    if (!status.active) return;
+    total++;
+    if (checks[i]) checked++;
+  });
+
+  state.openTrade = {
+    id: 'T' + Date.now().toString(36).toUpperCase(),
+    strategyId: state.activeStrategyId,
+    strategyName: activeStrategy()?.name || '',
+    side: state.side,
+    instrument, entry, stop, qty,
+    riskPoints, riskDollars, notes, conv,
+    entryTime: new Date().toISOString(),
+    entryCST: formatClockAmPm(getCST().h, getCST().m),
+    entryAdh: { checked, total },
+    exitReenter: 0
+  };
+  state.checks = { long:{}, short:{} };
+  queueSave();
+  renderChecklist();
+  renderOpenPosition();
+  toast('Position armed — good hunting');
+  ['f_entry','f_stop','f_notes'].forEach(id => document.getElementById(id).value = '');
+});
+
+// ============================================================
+// OPEN POSITION
+// ============================================================
+function renderOpenPosition() {
+  const wrap = document.getElementById('openPosContainer');
+  if (!state.openTrade) { wrap.innerHTML = ''; return; }
+  const t = state.openTrade;
+  const cst = getCST();
+  const flattenMin = 14 * 60 + 55; // 14:55 CST = 15:55 ET
+  const mToFlatten = Math.max(0, flattenMin - cst.minutes);
+  const hToFlatten = Math.floor(mToFlatten / 60);
+  const minToFlatten = mToFlatten % 60;
+  const sideClass = t.side;
+
+  wrap.innerHTML = `
+    <div class="open-pos">
+      <div class="open-pos-hdr">
+        <h2>${escapeHtml(t.instrument)} <span class="side-pill ${sideClass}">${t.side.toUpperCase()}</span></h2>
+        <div style="font-size:10px; letter-spacing:0.2em; color:var(--dim); text-transform:uppercase;">${escapeHtml(t.strategyName||'')} · ${t.id}</div>
+      </div>
+      <div class="pos-grid">
+        <div class="pos-stat"><div class="k">Entry</div><div class="v">${t.entry.toFixed(2)}</div></div>
+        <div class="pos-stat"><div class="k">Stop</div><div class="v red">${t.stop.toFixed(2)}</div></div>
+        <div class="pos-stat"><div class="k">Risk · Pts</div><div class="v">${t.riskPoints.toFixed(2)}</div></div>
+        <div class="pos-stat"><div class="k">Risk · $</div><div class="v">$${t.riskDollars.toFixed(0)}</div></div>
+        <div class="pos-stat"><div class="k">Entry Time</div><div class="v">${t.entryCST}</div></div>
+      </div>
+      <div class="exit-monitors">
+        <div class="monitor ${mToFlatten < 30 ? 'trigger' : ''}">
+          <div class="monitor-hdr">Flatten Timer · 14:55 CST</div>
+          <div class="monitor-val">${hToFlatten}h ${String(minToFlatten).padStart(2,'0')}m</div>
+          <div class="monitor-sub">${mToFlatten < 30 ? 'Final window approaching' : 'Ample runway'}</div>
+        </div>
+        <div class="monitor ${t.exitReenter >= 1 ? 'trigger' : ''}">
+          <div class="monitor-hdr">Noise Re-entry Counter</div>
+          <div class="monitor-val">${t.exitReenter} / 2 bars</div>
+          <div class="monitor-sub">Click + when bar closes back inside noise</div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="btn-secondary" style="padding:4px 10px; font-size:9px;" id="reEnterInc">+ Bar</button>
+            <button class="btn-secondary" style="padding:4px 10px; font-size:9px;" id="reEnterReset">Reset</button>
+          </div>
+        </div>
+        <div class="monitor">
+          <div class="monitor-hdr">VWAP Cross Watch</div>
+          <div class="monitor-val">Manual</div>
+          <div class="monitor-sub">Eye the chart — exit on close through VWAP</div>
+        </div>
+      </div>
+      <div class="exit-row">
+        <div class="form-field"><label>Exit Price</label><input type="number" id="ex_price" step="0.25"></div>
+        <div class="form-field"><label>Exit Reason</label><select id="ex_reason">
+          <option value="vwap">VWAP cross-back</option>
+          <option value="hard">Hard stop hit</option>
+          <option value="noise">Noise re-entry</option>
+          <option value="eod">End of session</option>
+          <option value="manual">Manual</option>
+        </select></div>
+        <div class="form-field"><label>Exit Notes</label><input type="text" id="ex_notes"></div>
+        <button class="btn-primary" id="closePos">Close Position →</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('reEnterInc').addEventListener('click', () => {
+    state.openTrade.exitReenter = Math.min(2, (state.openTrade.exitReenter||0) + 1);
+    queueSave(); renderOpenPosition();
+    if (state.openTrade.exitReenter >= 2) toast('Noise re-entry trigger HIT — exit', 'err');
+  });
+  document.getElementById('reEnterReset').addEventListener('click', () => {
+    state.openTrade.exitReenter = 0; queueSave(); renderOpenPosition();
+  });
+  document.getElementById('closePos').addEventListener('click', closeOpenPosition);
+}
+
+function closeOpenPosition() {
+  const price = parseFloat(document.getElementById('ex_price').value);
+  if (!price) { toast('Exit price required', 'err'); return; }
+  const reason = document.getElementById('ex_reason').value;
+  const exitNotes = document.getElementById('ex_notes').value.trim();
+  const t = state.openTrade;
+  const dir = t.side === 'long' ? 1 : -1;
+  const points = (price - t.entry) * dir;
+  const ppp = activeRules().risk.ppp || 20;
+  const pnl = points * ppp * t.qty;
+  const r = t.riskPoints > 0 ? points / t.riskPoints : 0;
+
+  state.trades.unshift({
+    ...t,
+    exitPrice: price, exitReason: reason, exitNotes,
+    exitTime: new Date().toISOString(),
+    exitCST: formatClockAmPm(getCST().h, getCST().m),
+    pnlPoints: points, pnlDollars: pnl, R: r,
+    win: pnl > 0, date: getCSTDateKey()
+  });
+  state.openTrade = null;
+  queueSave();
+  renderOpenPosition(); renderChecklist();
+  toast(`Closed ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(0)} (${r >= 0 ? '+' : ''}${r.toFixed(2)}R)`, pnl >= 0 ? 'ok' : 'err');
+}
+
+// ============================================================
+// LEDGER
+// ============================================================
+function renderLog() {
+  const el = document.getElementById('logContent');
+  const trades = state.trades.filter(t => t.strategyId === state.activeStrategyId);
+  if (trades.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="glyph">§</div>The ledger is blank for this strategy.<br><span style="font-size:10px; letter-spacing:0.2em;">Your first entry will appear here.</span></div>`;
+    return;
+  }
+  const rows = trades.map(t => {
+    const adhPct = t.entryAdh && t.entryAdh.total ? (t.entryAdh.checked / t.entryAdh.total) : 0;
+    const adhPips = t.entryAdh ? Array.from({length: t.entryAdh.total}, (_, i) =>
+      `<span class="adh-pip ${i < t.entryAdh.checked ? 'on' : ''}"></span>`).join('') : '—';
+    return `
+      <tr>
+        <td style="color:var(--dim); font-size:11px;">${t.date || '—'}<br><span style="font-size:10px;">${t.entryCST || ''}</span></td>
+        <td><strong>${escapeHtml(t.instrument)}</strong></td>
+        <td class="side-${t.side}">${t.side.toUpperCase()}</td>
+        <td>${(t.entry||0).toFixed(2)} → ${(t.exitPrice||0).toFixed(2)}</td>
+        <td>${(t.pnlPoints||0).toFixed(2)}</td>
+        <td class="${t.pnlDollars >= 0 ? 'r-pos' : 'r-neg'}">${t.pnlDollars >= 0 ? '+' : ''}$${(t.pnlDollars||0).toFixed(0)}</td>
+        <td class="${t.R >= 0 ? 'r-pos' : 'r-neg'}">${t.R >= 0 ? '+' : ''}${(t.R||0).toFixed(2)}R</td>
+        <td>${adhPips}</td>
+        <td style="font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:0.15em;">${escapeHtml(t.exitReason || '')}</td>
+        <td style="max-width:200px; font-size:11px; color:var(--dim);">${escapeHtml(t.notes || '')}</td>
+        <td><button class="btn-danger" data-del="${t.id}">Delete</button></td>
+      </tr>`;
+  }).join('');
+  el.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px;">
+      <h2 style="font-family:'Fraunces',serif; font-size:28px; font-weight:900; letter-spacing:-0.01em;">The Ledger</h2>
+      <div style="font-size:10px; color:var(--dim); letter-spacing:0.2em; text-transform:uppercase;">${trades.length} entries · ${escapeHtml(activeStrategy()?.name||'')}</div>
+    </div>
+    <div style="overflow-x:auto;">
+    <table class="log-table">
+      <thead><tr><th>Date/Time</th><th>Ticker</th><th>Side</th><th>Entry→Exit</th><th>Pts</th><th>P&amp;L</th><th>R</th><th>Rules</th><th>Exit</th><th>Notes</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+    <div class="sys-bar"><span>Export ledger as CSV</span><button id="exportCsv">Export CSV</button></div>
+  `;
+  el.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+    if (!confirm('Delete this entry?')) return;
+    state.trades = state.trades.filter(x => x.id !== b.dataset.del);
+    queueSave(); renderLog(); renderStats();
+  }));
+  document.getElementById('exportCsv').addEventListener('click', () => {
+    const rows = [['id','date','entryCST','exitCST','strategy','instrument','side','entry','exit','stop','qty','points','pnl','R','rulesChecked','rulesTotal','reason','notes']];
+    trades.forEach(t => rows.push([t.id, t.date, t.entryCST, t.exitCST, t.strategyName, t.instrument, t.side, t.entry, t.exitPrice, t.stop, t.qty, t.pnlPoints, t.pnlDollars, t.R, t.entryAdh?.checked, t.entryAdh?.total, t.exitReason, (t.notes||'').replace(/,/g,';')]));
+    downloadCsv('ledger.csv', rows);
+  });
+}
+function downloadCsv(name, rows) {
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function renderStats() {
+  const el = document.getElementById('statsContent');
+  const trades = state.trades.filter(t => t.strategyId === state.activeStrategyId);
+  if (trades.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="glyph">∅</div>No trades for this strategy yet.</div>`;
+    return;
+  }
+  const wins = trades.filter(t => t.pnlDollars > 0);
+  const losses = trades.filter(t => t.pnlDollars <= 0);
+  const totalPnl = trades.reduce((s,t) => s + (t.pnlDollars||0), 0);
+  const winRate = (wins.length / trades.length) * 100;
+  const avgWin = wins.length ? wins.reduce((s,t)=>s+t.pnlDollars,0) / wins.length : 0;
+  const avgLoss = losses.length ? losses.reduce((s,t)=>s+t.pnlDollars,0) / losses.length : 0;
+  const totalWins = wins.reduce((s,t)=>s+t.pnlDollars,0);
+  const totalLosses = Math.abs(losses.reduce((s,t)=>s+t.pnlDollars,0));
+  const pf = totalLosses > 0 ? totalWins / totalLosses : (totalWins > 0 ? Infinity : 0);
+  const expectancy = (winRate/100)*avgWin + (1 - winRate/100)*avgLoss;
+  const avgR = trades.reduce((s,t)=>s+(t.R||0),0) / trades.length;
+  const adhScore = trades.map(t => t.entryAdh?.total ? (t.entryAdh.checked/t.entryAdh.total) : 1);
+  const fullAdh = trades.filter((t,i) => adhScore[i] === 1);
+  const partialAdh = trades.filter((t,i) => adhScore[i] < 1);
+  const fullAdhPnl = fullAdh.reduce((s,t)=>s+t.pnlDollars,0);
+  const partialAdhPnl = partialAdh.reduce((s,t)=>s+t.pnlDollars,0);
+
+  let eq = 0; const eqPoints = [0];
+  [...trades].reverse().forEach(t => { eq += t.pnlDollars||0; eqPoints.push(eq); });
+  const ascii = drawAsciiChart(eqPoints, 70, 12);
+
+  const adhCells = trades.slice(0, 60).reverse().map(t => {
+    const p = t.entryAdh?.total ? (t.entryAdh.checked/t.entryAdh.total)*100 : 100;
+    let cls = 'a100';
+    if (p < 100) cls = 'a80';
+    if (p < 80) cls = 'a60';
+    if (p < 60) cls = 'a40';
+    if (p < 40) cls = 'a0';
+    return `<div class="adh-cell ${cls}" title="${t.date} · ${p.toFixed(0)}%">${t.pnlDollars>=0?'+':'−'}</div>`;
+  }).join('');
+
+  const reasons = {};
+  trades.forEach(t => { const r = t.exitReason || 'manual'; reasons[r] = reasons[r]||{n:0, pnl:0}; reasons[r].n++; reasons[r].pnl += t.pnlDollars||0; });
+
+  el.innerHTML = `
+    <h2 style="font-family:'Fraunces',serif; font-size:28px; font-weight:900; letter-spacing:-0.01em; margin-bottom:4px;">Post-Mortem</h2>
+    <div style="font-size:10px; color:var(--dim); letter-spacing:0.2em; text-transform:uppercase; margin-bottom:24px;">${escapeHtml(activeStrategy()?.name||'')}</div>
+    <div class="grid-4">
+      <div class="stat-big"><div class="k">Net P&amp;L</div><div class="v ${totalPnl>=0?'green':'red'}">${totalPnl>=0?'+':''}$${totalPnl.toFixed(0)}</div><div class="sub">${trades.length} trades</div></div>
+      <div class="stat-big"><div class="k">Win Rate</div><div class="v">${winRate.toFixed(1)}%</div><div class="sub">${wins.length}W · ${losses.length}L</div></div>
+      <div class="stat-big"><div class="k">Profit Factor</div><div class="v ${pf>=1?'green':'red'}">${isFinite(pf) ? pf.toFixed(2) : '∞'}</div><div class="sub">Gross win ÷ gross loss</div></div>
+      <div class="stat-big"><div class="k">Expectancy</div><div class="v ${expectancy>=0?'green':'red'}">${expectancy>=0?'+':''}$${expectancy.toFixed(0)}</div><div class="sub">per trade · avg ${avgR>=0?'+':''}${avgR.toFixed(2)}R</div></div>
+    </div>
+    <div class="grid-4" style="margin-top:24px;">
+      <div class="stat-big"><div class="k">Avg Win</div><div class="v green">+$${avgWin.toFixed(0)}</div><div class="sub">biggest · $${wins.length ? Math.max(...wins.map(t=>t.pnlDollars)).toFixed(0) : 0}</div></div>
+      <div class="stat-big"><div class="k">Avg Loss</div><div class="v red">$${avgLoss.toFixed(0)}</div><div class="sub">worst · $${losses.length ? Math.min(...losses.map(t=>t.pnlDollars)).toFixed(0) : 0}</div></div>
+      <div class="stat-big"><div class="k">Full-Rules P&amp;L</div><div class="v ${fullAdhPnl>=0?'green':'red'}">${fullAdhPnl>=0?'+':''}$${fullAdhPnl.toFixed(0)}</div><div class="sub">${fullAdh.length} at 100%</div></div>
+      <div class="stat-big"><div class="k">Rule-Break P&amp;L</div><div class="v ${partialAdhPnl>=0?'green':'red'}">${partialAdhPnl>=0?'+':''}$${partialAdhPnl.toFixed(0)}</div><div class="sub">${partialAdh.length} w/ breaks</div></div>
+    </div>
+    <div class="equity-wrap">
+      <div class="equity-hdr"><h3>Equity Curve</h3><div class="legend">ASCII · oldest → newest · ${eqPoints.length-1} fills</div></div>
+      <div class="ascii-chart">${ascii}</div>
+    </div>
+    <div class="equity-wrap">
+      <div class="equity-hdr"><h3>Adherence &amp; Outcome Grid</h3><div class="legend">last 60 trades</div></div>
+      <div class="adh-chart">${adhCells}</div>
+    </div>
+    <div class="equity-wrap">
+      <div class="equity-hdr"><h3>Exit Anatomy</h3><div class="legend">how positions ended</div></div>
+      <table class="log-table">
+        <thead><tr><th>Reason</th><th>Count</th><th>Net $</th><th>Avg $</th></tr></thead>
+        <tbody>${Object.entries(reasons).sort((a,b)=>b[1].pnl-a[1].pnl).map(([r,d]) => `
+          <tr><td style="text-transform:uppercase; letter-spacing:0.15em; font-size:11px;">${r}</td><td>${d.n}</td><td class="${d.pnl>=0?'r-pos':'r-neg'}">${d.pnl>=0?'+':''}$${d.pnl.toFixed(0)}</td><td>${d.pnl>=0?'+':''}$${(d.pnl/d.n).toFixed(0)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function drawAsciiChart(pts, w, h) {
+  if (pts.length < 2) return 'awaiting data...';
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const range = max - min || 1;
+  const grid = Array.from({length: h}, () => Array(w).fill(' '));
+  for (let i = 0; i < w; i++) {
+    const idx = Math.floor((i / (w-1)) * (pts.length-1));
+    const val = pts[idx];
+    const y = Math.floor(((val - min) / range) * (h-1));
+    const row = h - 1 - y;
+    grid[row][i] = '▬';
+    for (let j = row+1; j < h; j++) grid[j][i] = '·';
+  }
+  const lines = grid.map((r, i) => {
+    const y = (max - (i/(h-1))*range);
+    return '$' + y.toFixed(0).padStart(6) + ' │ ' + r.join('');
+  });
+  lines.push('        └─' + '─'.repeat(w));
+  return lines.join('\n');
+}
+
+// ============================================================
+// BACKTEST
+// ============================================================
+let btImageData = null;
+function renderBacktest() {
+  const dateInp = document.getElementById('bt_date');
+  if (!dateInp.value) dateInp.value = getCSTDateKey();
+  renderBacktestList();
+  renderBacktestSummary();
+  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
+  document.getElementById('btMeta').textContent = `${bt.length} ENTRIES`;
+  document.getElementById('btStrategyNote').textContent = `Historical replays for "${activeStrategy()?.name||''}"`;
+}
+function renderBacktestSummary() {
+  const wrap = document.getElementById('btSummary');
+  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
+  if (bt.length === 0) { wrap.innerHTML = ''; return; }
+  const total = bt.reduce((s,x) => s + (x.points||0), 0);
+  const wins = bt.filter(x => x.points > 0);
+  const losses = bt.filter(x => x.points <= 0);
+  const wr = (wins.length / bt.length) * 100;
+  const avgW = wins.length ? wins.reduce((s,x)=>s+x.points,0) / wins.length : 0;
+  const avgL = losses.length ? losses.reduce((s,x)=>s+x.points,0) / losses.length : 0;
+  const best = Math.max(...bt.map(x=>x.points||0));
+  const worst = Math.min(...bt.map(x=>x.points||0));
+  const ppp = activeRules().risk.ppp || 20;
+  wrap.innerHTML = `
+    <div class="bt-summary">
+      <div><div class="k">Net Points</div><div class="v ${total>=0?'green':'red'}">${total>=0?'+':''}${total.toFixed(2)}</div></div>
+      <div><div class="k">Est. P&amp;L @ ${ppp}</div><div class="v ${total>=0?'green':'red'}">${total>=0?'+':''}$${(total*ppp).toFixed(0)}</div></div>
+      <div><div class="k">Win Rate</div><div class="v">${wr.toFixed(1)}%</div></div>
+      <div><div class="k">Avg W / L</div><div class="v">${avgW.toFixed(1)} / ${avgL.toFixed(1)}</div></div>
+      <div><div class="k">Best / Worst</div><div class="v">${best.toFixed(1)} / ${worst.toFixed(1)}</div></div>
+    </div>`;
+}
+function renderBacktestList() {
+  const el = document.getElementById('btEntries');
+  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  if (bt.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="glyph">§</div>No backtest entries yet.</div>`;
+    return;
+  }
+  if (state.backtestView === 'grid') {
+    el.innerHTML = `<div class="bt-grid">${bt.map(renderBacktestCard).join('')}</div>`;
+  } else {
+    el.innerHTML = `<div class="bt-list">${bt.map(renderBacktestRow).join('')}</div>`;
+  }
+  el.querySelectorAll('[data-btdel]').forEach(b => b.addEventListener('click', async e => {
+    e.stopPropagation();
+    if (!confirm('Delete this backtest entry?')) return;
+    const id = b.dataset.btdel;
+    await deleteImage(id);
+    state.backtests = state.backtests.filter(x => x.id !== id);
+    queueSave();
+    renderBacktest();
+  }));
+  el.querySelectorAll('[data-btview]').forEach(b => b.addEventListener('click', async e => {
+    e.stopPropagation();
+    const id = b.dataset.btview;
+    const img = await fetchImage(id);
+    if (img) openLightbox(img); else toast('Image not found', 'err');
+  }));
+}
+function renderBacktestRow(b) {
+  const pos = b.points >= 0;
+  const sideColor = b.side === 'long' ? 'var(--green)' : 'var(--red)';
+  return `
+    <div class="bt-entry">
+      <div class="bt-date"><div class="d">${b.date || '—'}</div><div>${escapeHtml(b.time || '')}</div></div>
+      <div class="bt-thumb" ${b.hasImage ? `data-btview="${b.id}"` : ''}>${b.hasImage ? 'VIEW IMG' : 'NO IMG'}</div>
+      <div class="bt-body">
+        <div>
+          <span style="color:${sideColor}; font-weight:700; letter-spacing:0.15em; font-size:11px;">${(b.side||'').toUpperCase()}</span>
+          <span style="color:var(--dim); margin-left:8px;">${escapeHtml(b.instrument || '')}</span>
+          ${b.tag ? `<span style="margin-left:8px; font-size:10px; padding:2px 6px; background:var(--panel-2); color:var(--amber); letter-spacing:0.15em;">${escapeHtml(b.tag)}</span>` : ''}
+          ${b.stale ? '<span class="stale-tag">STALE</span>' : ''}
+        </div>
+        ${b.notes ? `<div style="margin-top:6px; font-size:11px;">${escapeHtml(b.notes)}</div>` : ''}
+        <div class="meta">${b.reason ? `<span>Exit: ${escapeHtml(b.reason)}</span>` : ''}${b.R ? `<span>${b.R>=0?'+':''}${parseFloat(b.R).toFixed(2)}R</span>` : ''}</div>
+      </div>
+      <div class="bt-pts"><div class="pts ${pos?'pos':'neg'}">${pos?'+':''}${(b.points||0).toFixed(2)}</div><div class="r">points</div></div>
+      <div><button class="btn-danger" data-btdel="${b.id}">Delete</button></div>
+    </div>`;
+}
+function renderBacktestCard(b) {
+  const pos = b.points >= 0;
+  const sideColor = b.side === 'long' ? 'var(--green)' : 'var(--red)';
+  return `
+    <div class="bt-grid-card">
+      <div class="thumb" ${b.hasImage ? `data-btview="${b.id}"` : ''}>${b.hasImage ? 'VIEW IMG' : 'NO IMAGE'}</div>
+      <div class="body">
+        <div class="hd"><span class="date">${b.date || '—'}</span><span class="pts ${pos?'pos':'neg'}">${pos?'+':''}${(b.points||0).toFixed(2)}</span></div>
+        <div style="font-size:10px; letter-spacing:0.15em; text-transform:uppercase;"><span style="color:${sideColor}; font-weight:700;">${(b.side||'').toUpperCase()}</span><span style="color:var(--dim); margin-left:6px;">${escapeHtml(b.instrument || '')}</span>${b.stale?'<span class="stale-tag">STALE</span>':''}</div>
+        ${b.notes ? `<div class="notes">${escapeHtml(b.notes)}</div>` : ''}
+        <div style="display:flex; justify-content:flex-end; margin-top:8px;"><button class="btn-danger" data-btdel="${b.id}" style="font-size:9px; padding:4px 8px;">Delete</button></div>
+      </div>
+    </div>`;
+}
+
+function markStaleBacktests() {
+  const sid = state.activeStrategyId;
+  state.backtests.forEach(b => { if (b.strategyId === sid) b.stale = true; });
+  queueSave();
+}
+
+function compressImage(file, maxDim = 1600, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function stageImage(file) {
+  if (!file || !file.type.startsWith('image/')) { toast('Not an image', 'err'); return; }
+  try {
+    btImageData = await compressImage(file);
+    const preview = document.getElementById('dropPreview');
+    preview.src = btImageData;
+    preview.style.display = 'block';
+    document.getElementById('dropText').style.display = 'none';
+    toast('Image staged');
+  } catch { toast('Image read failed', 'err'); }
+}
+function wireBacktestForm() {
+  const drop = document.getElementById('btDrop');
+  const input = document.getElementById('bt_image');
+  drop.addEventListener('click', () => input.click());
+  input.addEventListener('change', e => { if (e.target.files[0]) stageImage(e.target.files[0]); });
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) stageImage(e.dataTransfer.files[0]);
+  });
+  document.getElementById('btPaste').addEventListener('click', async () => {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        for (const type of item.types) {
+          if (type.startsWith('image/')) { const blob = await item.getType(type); await stageImage(blob); return; }
+        }
+      }
+      toast('No image in clipboard', 'err');
+    } catch { toast('Clipboard needs permission', 'err'); }
+  });
+  document.addEventListener('paste', e => {
+    if (!document.getElementById('panel-backtest').classList.contains('active')) return;
+    const items = e.clipboardData?.items || [];
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const blob = item.getAsFile();
+        if (blob) { stageImage(blob); e.preventDefault(); return; }
+      }
+    }
+  });
+  document.getElementById('btClear').addEventListener('click', clearBacktestForm);
+  document.getElementById('btCommit').addEventListener('click', commitBacktest);
+  document.getElementById('btExport').addEventListener('click', exportBacktests);
+  document.getElementById('btToggleView').addEventListener('click', () => {
+    state.backtestView = state.backtestView === 'list' ? 'grid' : 'list';
+    document.getElementById('btToggleView').textContent = state.backtestView === 'list' ? 'Grid View' : 'List View';
+    renderBacktestList();
+  });
+}
+function clearBacktestForm() {
+  ['bt_points','bt_R','bt_time','bt_tag','bt_notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('bt_instrument').value = 'NQ';
+  document.getElementById('bt_reason').value = '';
+  document.getElementById('bt_side').value = 'long';
+  document.getElementById('bt_date').value = getCSTDateKey();
+  btImageData = null;
+  document.getElementById('dropPreview').style.display = 'none';
+  document.getElementById('dropPreview').src = '';
+  document.getElementById('dropText').style.display = 'block';
+}
+async function commitBacktest() {
+  const date = document.getElementById('bt_date').value;
+  const points = parseFloat(document.getElementById('bt_points').value);
+  if (!date) { toast('Date required', 'err'); return; }
+  if (isNaN(points)) { toast('Points required', 'err'); return; }
+  const id = 'BT' + Date.now().toString(36).toUpperCase();
+  const entry = {
+    id, strategyId: state.activeStrategyId, strategyName: activeStrategy()?.name || '',
+    date, side: document.getElementById('bt_side').value,
+    instrument: document.getElementById('bt_instrument').value.trim() || 'NQ',
+    points,
+    R: parseFloat(document.getElementById('bt_R').value) || null,
+    time: document.getElementById('bt_time').value.trim(),
+    reason: document.getElementById('bt_reason').value,
+    tag: document.getElementById('bt_tag').value.trim(),
+    notes: document.getElementById('bt_notes').value.trim(),
+    hasImage: !!btImageData, stale: false,
+    createdAt: new Date().toISOString()
+  };
+  if (btImageData) {
+    try { localStorage.setItem('ledger:img:' + id, btImageData); } catch {}
+    uploadImage(id, btImageData).catch(()=>{});
+  }
+  state.backtests.unshift(entry);
+  queueSave();
+  clearBacktestForm();
+  btImageData = null;
+  renderBacktest();
+  toast(`Entry logged · ${points>=0?'+':''}${points.toFixed(2)} pts`);
+}
+function exportBacktests() {
+  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
+  if (bt.length === 0) { toast('Nothing to export', 'err'); return; }
+  const rows = [['id','date','time','side','instrument','points','R','reason','tag','notes','hasImage','stale']];
+  bt.forEach(b => rows.push([b.id, b.date, b.time, b.side, b.instrument, b.points, b.R, b.reason, b.tag, (b.notes||'').replace(/,/g,';').replace(/\n/g,' '), b.hasImage?'Y':'N', b.stale?'Y':'N']));
+  downloadCsv('backtests.csv', rows);
+}
+
+function openLightbox(src) {
+  document.getElementById('lbImg').src = src;
+  document.getElementById('lightbox').classList.add('show');
+}
+document.getElementById('lightbox').addEventListener('click', () => document.getElementById('lightbox').classList.remove('show'));
+document.getElementById('lbClose').addEventListener('click', e => { e.stopPropagation(); document.getElementById('lightbox').classList.remove('show'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.getElementById('lightbox').classList.remove('show'); hideModal(); }});
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function renderSettings() {
+  const el = document.getElementById('syncStatusDetail');
+  el.innerHTML = `
+    <div style="display:grid; grid-template-columns: auto 1fr; gap: 12px 20px; font-size:12px;">
+      <div style="color:var(--dim); letter-spacing:0.15em; text-transform:uppercase; font-size:10px;">Status</div>
+      <div><span class="sync-dot ${state.syncStatus}" style="display:inline-block; vertical-align:middle; margin-right:8px;"></span>${({synced:'Synced to server', syncing:'Syncing…', error:'Sync error — check network', local:'Local only — no sync key'})[state.syncStatus]}</div>
+      <div style="color:var(--dim); letter-spacing:0.15em; text-transform:uppercase; font-size:10px;">Last sync</div>
+      <div>${state.lastSyncTime ? state.lastSyncTime.toLocaleString() : '—'}</div>
+      <div style="color:var(--dim); letter-spacing:0.15em; text-transform:uppercase; font-size:10px;">Strategies</div>
+      <div>${state.strategies.length}</div>
+      <div style="color:var(--dim); letter-spacing:0.15em; text-transform:uppercase; font-size:10px;">Trades</div>
+      <div>${state.trades.length}</div>
+      <div style="color:var(--dim); letter-spacing:0.15em; text-transform:uppercase; font-size:10px;">Backtests</div>
+      <div>${state.backtests.length}</div>
+    </div>
+  `;
+}
+document.getElementById('viewSyncKey').addEventListener('click', () => {
+  showModal(`
+    <h3>Your Sync Key</h3>
+    <p>Paste this on another device to access the same data. Keep it private.</p>
+    <div class="sync-key-display" style="margin:20px 0;">${state.syncKey||'—'}</div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn ghost" onclick="navigator.clipboard.writeText('${state.syncKey}').then(()=>window.__toast('Copied'))">Copy</button>
+      <button class="btn" style="flex:1;" onclick="window.__hideModal()">Close</button>
+    </div>
+  `);
+});
+window.__toast = toast;
+window.__hideModal = hideModal;
+document.getElementById('changeSyncKey').addEventListener('click', () => {
+  if (!confirm('This will disconnect from the current sync key and prompt for a new one. Local data stays on this device.')) return;
+  localStorage.removeItem('ledger:current_key');
+  location.reload();
+});
+document.getElementById('forceSyncBtn').addEventListener('click', async () => {
+  toast('Syncing…');
+  await doSync();
+  renderSettings();
+});
+document.getElementById('resetAllBtn').addEventListener('click', () => {
+  if (!confirm('⚠️ DELETE ALL local data? This will not affect the server. If you have your sync key, you can reload data.')) return;
+  localStorage.clear();
+  location.reload();
+});
+document.getElementById('exportAllBtn').addEventListener('click', () => {
+  const payload = packState();
+  payload._syncKey = state.syncKey; // informational
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `ledger-backup-${getCSTDateKey()}.json`; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importAllBtn').addEventListener('click', () => {
+  showModal(`
+    <h3>Import JSON Backup</h3>
+    <p>Paste the full JSON contents below. This will <strong style="color:var(--red);">overwrite</strong> your current data on this device and push to the server.</p>
+    <textarea id="importJsonArea" placeholder='{"strategies":[...],...}'></textarea>
+    <div style="display:flex; gap:10px;">
+      <button class="btn ghost" onclick="window.__hideModal()">Cancel</button>
+      <button class="btn" style="flex:1;" id="importConfirmBtn">Import &amp; Overwrite</button>
+    </div>
+  `);
+  document.getElementById('importConfirmBtn').addEventListener('click', async () => {
+    const txt = document.getElementById('importJsonArea').value.trim();
+    try {
+      const data = JSON.parse(txt);
+      unpackState(data);
+      await doSync();
+      hideModal();
+      rerenderAll();
+      toast('Import complete');
+    } catch (e) {
+      toast('Invalid JSON', 'err');
+    }
+  });
+});
+
+// ============================================================
+// CLOCK
+// ============================================================
+function tick() {
+  const cst = getCST();
+  const big = document.getElementById('bigClock');
+  let h = cst.h; const m = cst.m;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  let h12 = h % 12; if (h12 === 0) h12 = 12;
+  big.innerHTML = `${h12}:${String(m).padStart(2,'0')}<span class="ampm">${ampm}</span>`;
+
+  const ws = document.getElementById('windowState');
+  // 9 AM - 1 PM CST = 10 AM - 2 PM ET window
+  const inWindow = cst.minutes >= 9*60 && cst.minutes < 13*60;
+  ws.textContent = inWindow ? 'OPEN · 9:00–13:00 CST' : 'CLOSED';
+  ws.className = 'v ' + (inWindow ? 'ok' : 'no');
+
+  const status = document.getElementById('sessionStatus');
+  const marketOpen = cst.minutes >= 8*60+30 && cst.minutes < 15*60;
+  status.textContent = marketOpen ? 'Session Live' : 'Session Offline';
+  status.style.color = marketOpen ? 'var(--green)' : 'var(--dim)';
+
+  document.getElementById('rulebarClock').textContent = `${String(cst.h).padStart(2,'0')}:${String(cst.m).padStart(2,'0')}:${String(cst.s).padStart(2,'0')} CST`;
+  document.getElementById('dateStamp').textContent = cst.date.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+
+  const today = getCSTDateKey();
+  const todayTrades = state.trades.filter(t => t.date === today && t.strategyId === state.activeStrategyId).length;
+  document.getElementById('tradeCountBar').textContent = `Trades Today · ${todayTrades}${state.openTrade ? ' + 1 OPEN' : ''}`;
+
+  if (cst.s === 0) {
+    renderGuardrailBanner();
+    if (state.openTrade) renderOpenPosition();
+    renderChecklist(); // time-conditional rules may have changed
+  }
+}
+
+// ============================================================
+// RE-RENDER ALL
+// ============================================================
+function rerenderAll() {
+  renderStrategyPicker();
+  renderRules();
+  renderChecklist();
+  renderOpenPosition();
+  renderGuardrailBanner();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+async function bootApp() {
+  renderStrategyPicker();
+  renderChecklist();
+  renderOpenPosition();
+  renderRules();
+  renderGuardrailBanner();
+  wireBacktestForm();
+  tick();
+  setInterval(tick, 1000);
+
+  // New day check
+  const today = getCSTDateKey();
+  if (state.date !== today) {
+    state.checks = { long:{}, short:{} };
+    state.lockoutOverride = false;
+    state.date = today;
+    queueSave();
+  }
+  updateSyncIndicator('synced');
+}
+
+document.getElementById('syncIndicator').addEventListener('click', () => {
+  document.querySelector('[data-panel="settings"]').click();
+});
+
+(async function init() {
+  const storedKey = localStorage.getItem('ledger:current_key');
+  if (storedKey && validateSyncKey(storedKey)) {
+    state.syncKey = storedKey;
+    // try local first, then remote
+    const local = localStorage.getItem('ledger:' + storedKey);
+    if (local) { try { unpackState(JSON.parse(local)); } catch {} }
+    hideSetupScreen();
+    await bootApp();
+    // pull remote in background and merge if newer
+    const remote = await pullRemote();
+    if (remote?.data) {
+      const remoteTime = new Date(remote.updated_at || 0).getTime();
+      const localTime = local ? new Date(JSON.parse(local).savedAt || 0).getTime() : 0;
+      if (remoteTime > localTime) {
+        unpackState(remote.data);
+        rerenderAll();
+        toast('Loaded newer data from server');
+      }
+    }
+    updateSyncIndicator('synced');
+  } else {
+    showSetupScreen();
+  }
+})();
+</script>
+</body>
+</html>
