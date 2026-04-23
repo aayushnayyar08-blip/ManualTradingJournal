@@ -430,7 +430,6 @@
       <div class="floor-hdr-session">
         <div class="floor-hdr-label">Entry Window</div>
         <div class="session-v" id="windowState">—</div>
-        <div class="session-sub" id="windowSub">9:00 – 13:00 CST</div>
       </div>
     </div>
 
@@ -518,6 +517,10 @@
         <div class="form-field"><label>Daily Profit Target ($)</label><input type="number" id="r_profittarget" placeholder="e.g. 1000 (optional)"></div>
         <div class="form-field"><label>Blackout: Start (HH:MM CST)</label><input type="text" id="r_blackoutStart" placeholder="e.g. 12:30"></div>
         <div class="form-field"><label>Blackout: End (HH:MM CST)</label><input type="text" id="r_blackoutEnd" placeholder="e.g. 13:30"></div>
+      </div>
+      <div class="form-grid" style="grid-template-columns: 1fr 3fr;">
+        <div class="form-field"><label>EOD Flatten Time (CST)</label><input type="text" id="r_flattenTime" placeholder="e.g. 14:55 — leave blank to disable"></div>
+        <div class="form-field"><label>&nbsp;</label><div style="font-size:11px; color:var(--dim); padding:10px 0; font-style:italic;">Shows a countdown on open positions. Leave empty if your strategy has no forced EOD close.</div></div>
       </div>
       <div class="sys-bar">
         <span>Changes save automatically. Guardrails lock entries when hit.</span>
@@ -655,7 +658,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ============================================================
 // CORE STATE
 // ============================================================
-const DEFAULT_RISK = { equity: 50000, risk: 1.0, ppp: 20, maxtrades: 2, losslimit: 0, profittarget: 0, blackoutStart: '', blackoutEnd: '' };
+const DEFAULT_RISK = { equity: 50000, risk: 1.0, ppp: 20, maxtrades: 2, losslimit: 0, profittarget: 0, blackoutStart: '', blackoutEnd: '', flattenTime: '14:55' };
 
 function newStrategy(name) {
   return {
@@ -1081,6 +1084,7 @@ function renderRules() {
   document.getElementById('r_profittarget').value = r.risk.profittarget || '';
   document.getElementById('r_blackoutStart').value = r.risk.blackoutStart || '';
   document.getElementById('r_blackoutEnd').value = r.risk.blackoutEnd || '';
+  document.getElementById('r_flattenTime').value = r.risk.flattenTime || '';
 }
 function renderRuleList(containerId, arr, bucket, conditions) {
   const el = document.getElementById(containerId);
@@ -1198,11 +1202,11 @@ document.querySelectorAll('.add-rule').forEach(btn => {
     }, 10);
   });
 });
-['r_equity','r_risk','r_ppp','r_maxtrades','r_losslimit','r_profittarget','r_blackoutStart','r_blackoutEnd'].forEach(id => {
+['r_equity','r_risk','r_ppp','r_maxtrades','r_losslimit','r_profittarget','r_blackoutStart','r_blackoutEnd','r_flattenTime'].forEach(id => {
   document.getElementById(id).addEventListener('input', e => {
     const k = id.slice(2);
     const r = activeRules();
-    if (['blackoutStart','blackoutEnd'].includes(k)) r.risk[k] = e.target.value;
+    if (['blackoutStart','blackoutEnd','flattenTime'].includes(k)) r.risk[k] = e.target.value;
     else r.risk[k] = parseFloat(e.target.value) || 0;
     queueSave();
     document.getElementById('ruleSaveStatus').textContent = 'Saving…';
@@ -1472,8 +1476,10 @@ function renderOpenPosition() {
   if (!state.openTrade) { wrap.innerHTML = ''; return; }
   const t = state.openTrade;
   const cst = getCST();
-  const flattenMin = 14 * 60 + 55; // 14:55 CST = 15:55 ET
-  const mToFlatten = Math.max(0, flattenMin - cst.minutes);
+  const flattenStr = activeRules().risk.flattenTime || '14:55';
+  const flattenParsed = parseHHMM(flattenStr);
+  const hasFlatten = flattenParsed != null;
+  const mToFlatten = hasFlatten ? Math.max(0, flattenParsed - cst.minutes) : 0;
   const hToFlatten = Math.floor(mToFlatten / 60);
   const minToFlatten = mToFlatten % 60;
   const sideClass = t.side;
@@ -1492,11 +1498,11 @@ function renderOpenPosition() {
         <div class="pos-stat"><div class="k">Entry Time</div><div class="v">${t.entryCST}</div></div>
       </div>
       <div class="exit-monitors">
-        <div class="monitor ${mToFlatten < 30 ? 'trigger' : ''}">
-          <div class="monitor-hdr">Flatten Timer · 14:55 CST</div>
+        ${hasFlatten ? `<div class="monitor ${mToFlatten < 30 ? 'trigger' : ''}">
+          <div class="monitor-hdr">Flatten Timer · ${flattenStr} CST</div>
           <div class="monitor-val">${hToFlatten}h ${String(minToFlatten).padStart(2,'0')}m</div>
           <div class="monitor-sub">${mToFlatten < 30 ? 'Final window approaching' : 'Ample runway'}</div>
-        </div>
+        </div>` : ''}
         <div class="monitor ${t.exitReenter >= 1 ? 'trigger' : ''}">
           <div class="monitor-hdr">Noise Re-entry Counter</div>
           <div class="monitor-val">${t.exitReenter} / 2 bars</div>
@@ -2055,13 +2061,15 @@ function tick() {
   big.innerHTML = `${h12}:${String(m).padStart(2,'0')}<span class="ampm">${ampm}</span>`;
 
   const ws = document.getElementById('windowState');
-  // 9 AM - 1 PM CST = 10 AM - 2 PM ET window
-  const inWindow = cst.minutes >= 9*60 && cst.minutes < 13*60;
-  ws.textContent = inWindow ? 'OPEN' : 'CLOSED';
-  ws.className = 'session-v ' + (inWindow ? 'ok' : 'no');
+  // Futures market: Sun 5pm CST – Fri 4pm CST with daily maintenance 4–5pm CST
+  const day = cst.date.getDay(); // 0=Sun, 6=Sat
+  const inMaintenance = cst.minutes >= 16*60 && cst.minutes < 17*60;
+  const weekendClosed = (day === 6) || (day === 0 && cst.minutes < 17*60) || (day === 5 && cst.minutes >= 16*60);
+  const marketOpen = !weekendClosed && !inMaintenance;
+  ws.textContent = marketOpen ? 'OPEN' : 'CLOSED';
+  ws.className = 'session-v ' + (marketOpen ? 'ok' : 'no');
 
   const status = document.getElementById('sessionStatus');
-  const marketOpen = cst.minutes >= 8*60+30 && cst.minutes < 15*60;
   status.textContent = marketOpen ? 'Session Live' : 'Session Offline';
   status.style.color = marketOpen ? 'var(--green)' : 'var(--dim)';
 
