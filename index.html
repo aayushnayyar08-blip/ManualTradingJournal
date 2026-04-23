@@ -50,17 +50,21 @@
   .btn.ghost:hover { color: var(--ink); border-color: var(--ink); background: transparent; }
 
   /* MASTHEAD */
-  .masthead { border-bottom: 1px solid var(--line); padding: 20px 0 16px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 24px; }
-  .masthead .left { font-size: 10px; color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase; }
+  .masthead { border-bottom: 1px solid var(--line); padding: 24px 0 18px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 24px; }
+  .masthead .left { font-size: 10px; color: var(--dim); letter-spacing: 0.2em; text-transform: uppercase; }
   .masthead .right { text-align: right; font-size: 10px; color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase; }
-  .brand { font-family: 'Fraunces', serif; font-weight: 900; font-size: 42px; letter-spacing: -0.02em; text-align: center; line-height: 1; }
+  .brand { font-family: 'Fraunces', serif; font-weight: 900; font-size: 48px; letter-spacing: -0.025em; text-align: center; line-height: 0.95; }
   .brand em { font-style: italic; font-weight: 400; color: var(--dim); }
-  .subhead { text-align: center; font-size: 10px; letter-spacing: 0.4em; color: var(--dim); text-transform: uppercase; margin-top: 6px; }
-  .rulebar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); border-bottom: 3px double var(--line); padding: 6px 0; margin-top: 16px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+  .subhead { text-align: center; font-size: 10px; letter-spacing: 0.4em; color: var(--dim); text-transform: uppercase; margin-top: 8px; }
+  .rulebar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; border-top: 1px solid var(--line); border-bottom: 3px double var(--line); padding: 8px 0; margin-top: 16px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+  .rulebar > * { padding: 0 16px; border-left: 1px solid var(--line); display: flex; align-items: center; }
+  .rulebar > *:first-child { border-left: none; }
+  .rulebar > *:last-child { justify-content: flex-end; }
   .rulebar .live { color: var(--green); }
   .rulebar .live::before { content: '●'; margin-right: 6px; animation: pulse 1.8s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .sync-indicator { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .sync-indicator { display: flex; align-items: center; gap: 6px; cursor: pointer; transition: color 0.15s; }
+  .sync-indicator:hover { color: var(--ink); }
   .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); }
   .sync-dot.synced { background: var(--green); }
   .sync-dot.syncing { background: var(--amber); animation: pulse 0.8s ease-in-out infinite; }
@@ -68,24 +72,27 @@
   .sync-dot.local { background: var(--cyan); }
 
   /* STRATEGY PICKER */
-  .strategy-bar { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
-  .strategy-bar label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); }
-  .strategy-select { background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 13px; padding: 8px 12px; min-width: 240px; font-weight: 500; }
-  .strategy-select:focus { outline: none; border-color: var(--ink); }
+  .strategy-bar { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border: 1px solid var(--line); border-top: none; background: var(--panel); }
+  .strategy-bar label { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--amber); font-weight: 700; }
+  .strategy-select { background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 14px; padding: 10px 14px; min-width: 260px; font-weight: 600; letter-spacing: -0.01em; cursor: pointer; }
+  .strategy-select:hover { border-color: var(--dim); }
+  .strategy-select:focus { outline: none; border-color: var(--amber); }
   .strategy-actions { display: flex; gap: 6px; margin-left: auto; }
-  .strategy-actions button { background: transparent; border: 1px solid var(--line); color: var(--dim); padding: 6px 12px; font-family: inherit; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
-  .strategy-actions button:hover { color: var(--ink); border-color: var(--ink); }
+  .strategy-actions button { background: transparent; border: 1px solid var(--line); color: var(--dim); padding: 7px 14px; font-family: inherit; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; font-weight: 600; }
+  .strategy-actions button:hover { color: var(--ink); border-color: var(--ink); background: var(--panel-2); }
   .strategy-actions button.danger:hover { color: var(--red); border-color: var(--red); }
 
   /* TABS */
-  .tabs { display: flex; gap: 0; margin-top: 24px; border-bottom: 1px solid var(--line); }
-  .tab { flex: 1; padding: 14px 16px; background: transparent; border: none; color: var(--dim); font-family: inherit; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: color 0.15s; border-bottom: 2px solid transparent; }
-  .tab:hover { color: var(--ink); }
-  .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
-  .tab .n { font-size: 9px; color: var(--dim); margin-right: 8px; }
+  .tabs { display: flex; gap: 0; border: 1px solid var(--line); border-top: none; background: var(--panel); }
+  .tab { flex: 1; padding: 16px 16px; background: transparent; border: none; color: var(--dim); font-family: inherit; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; border-right: 1px solid var(--line); font-weight: 600; position: relative; }
+  .tab:last-child { border-right: none; }
+  .tab:hover { color: var(--ink); background: var(--panel-2); }
+  .tab.active { color: var(--ink); background: var(--bg); }
+  .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--amber); }
+  .tab .n { font-size: 9px; color: var(--dim); margin-right: 8px; font-weight: 700; }
   .tab.active .n { color: var(--amber); }
 
-  .panel { display: none; padding: 24px 0; }
+  .panel { display: none; padding: 28px 0; }
   .panel.active { display: block; animation: fadein 0.25s ease; }
   @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
@@ -122,18 +129,26 @@
   .rule-section-hdr { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--amber); margin-bottom: 8px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
 
   /* CHECKLIST */
-  .checklist-hdr { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom: 20px; }
+  .floor-hdr { display: grid; grid-template-columns: 1fr 1.4fr 1fr; align-items: stretch; gap: 0; margin-bottom: 24px; border: 1px solid var(--line); background: var(--panel); }
+  .floor-hdr > div { padding: 18px 24px; }
+  .floor-hdr > div + div { border-left: 1px solid var(--line); }
+  .floor-hdr-side { display: flex; flex-direction: column; justify-content: center; }
+  .floor-hdr-label { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
   .side-select { display: flex; gap: 0; border: 1px solid var(--line); }
-  .side-btn { flex: 1; padding: 12px 24px; background: transparent; border: none; color: var(--dim); font-family: inherit; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .side-btn { flex: 1; padding: 10px 20px; background: transparent; border: none; color: var(--dim); font-family: inherit; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; font-weight: 600; }
+  .side-btn:hover { color: var(--ink); }
   .side-btn.active.long { background: var(--green); color: var(--bg); }
   .side-btn.active.short { background: var(--red); color: var(--bg); }
-  .clock { font-family: 'Fraunces', serif; font-size: 36px; font-weight: 900; letter-spacing: -0.02em; text-align: center; }
-  .clock .ampm { font-size: 12px; color: var(--dim); margin-left: 6px; letter-spacing: 0.2em; }
-  .clock-label { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); text-align: center; margin-top: 2px; }
-  .window-state { text-align: right; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
-  .window-state .v { font-size: 16px; font-family: 'Fraunces', serif; font-weight: 600; display: block; margin-top: 2px; letter-spacing: 0; }
-  .window-state .v.ok { color: var(--green); }
-  .window-state .v.no { color: var(--red); }
+  .floor-hdr-clock { text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+  .floor-hdr-clock::before { content: ''; position: absolute; inset: 20% 20%; background: radial-gradient(circle, rgba(230,180,80,0.04), transparent 70%); pointer-events: none; }
+  .clock { font-family: 'Fraunces', serif; font-size: 48px; font-weight: 900; letter-spacing: -0.03em; text-align: center; line-height: 1; position: relative; }
+  .clock .ampm { font-size: 13px; color: var(--dim); margin-left: 8px; letter-spacing: 0.2em; font-weight: 400; }
+  .clock-label { font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--dim); text-align: center; margin-top: 8px; position: relative; }
+  .floor-hdr-session { text-align: right; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; }
+  .session-v { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin-top: 4px; }
+  .session-v.ok { color: var(--green); }
+  .session-v.no { color: var(--red); }
+  .session-sub { font-size: 9px; color: var(--dim); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 6px; }
 
   .check-item { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; padding: 14px 16px; border: 1px solid var(--line); margin-bottom: -1px; background: var(--panel); cursor: pointer; transition: all 0.15s; gap: 12px; }
   .check-item:hover { background: var(--panel-2); }
@@ -167,7 +182,7 @@
   .gate-count { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 600; margin-top: 6px; text-align: right; }
 
   /* GUARDRAIL BANNER */
-  .guardrail { margin-top: 16px; padding: 14px 20px; border: 1px solid var(--red); background: linear-gradient(90deg, rgba(209,73,91,0.15), transparent); display: flex; justify-content: space-between; align-items: center; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+  .guardrail { margin-bottom: 12px; padding: 14px 20px; border: 1px solid var(--red); background: linear-gradient(90deg, rgba(209,73,91,0.15), transparent); display: flex; justify-content: space-between; align-items: center; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
   .guardrail .v { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; color: var(--red); letter-spacing: 0; }
   .guardrail.warn { border-color: var(--amber); background: linear-gradient(90deg, rgba(230,180,80,0.1), transparent); }
   .guardrail.warn .v { color: var(--amber); }
@@ -312,6 +327,11 @@
 
   .empty { text-align: center; padding: 60px 20px; color: var(--dim); font-style: italic; }
   .empty .glyph { font-family: 'Fraunces', serif; font-size: 80px; font-weight: 300; color: var(--line); line-height: 1; margin-bottom: 16px; }
+  .empty-cta { text-align: center; padding: 72px 24px; border: 1px dashed var(--line); background: linear-gradient(180deg, var(--panel), transparent); }
+  .empty-cta-glyph { font-family: 'Fraunces', serif; font-size: 96px; font-weight: 300; color: var(--line); line-height: 1; margin-bottom: 20px; }
+  .empty-cta-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; color: var(--ink); margin-bottom: 6px; letter-spacing: -0.01em; }
+  .empty-cta-sub { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--dim); margin-bottom: 28px; }
+  .empty-cta-sub strong { color: var(--amber); font-weight: 600; }
 
   .sys-bar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding: 12px 0; margin-top: 24px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
   .sys-bar button { background: transparent; border: none; color: var(--dim); font-family: inherit; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; padding: 4px 8px; }
@@ -322,13 +342,20 @@
     .masthead { grid-template-columns: 1fr; text-align: center; }
     .masthead .left, .masthead .right { text-align: center; }
     .brand { font-size: 32px; }
-    .checklist-hdr { grid-template-columns: 1fr; gap: 12px; }
+    .floor-hdr { grid-template-columns: 1fr; }
+    .floor-hdr > div + div { border-left: none; border-top: 1px solid var(--line); }
+    .floor-hdr-session { align-items: flex-start !important; text-align: left !important; }
+    .clock { font-size: 40px; }
     .gate { grid-template-columns: 1fr; text-align: center; }
     .gate-fill { width: 100%; }
     .tab { font-size: 9px; letter-spacing: 0.15em; padding: 10px 4px; }
     .tab .n { display: none; }
     .bt-entry { grid-template-columns: 1fr; gap: 8px; }
     .setup-choices { grid-template-columns: 1fr; }
+    .rulebar { grid-template-columns: 1fr 1fr; }
+    .rulebar > *:nth-child(3) { border-left: none; }
+    .strategy-bar { flex-wrap: wrap; }
+    .strategy-select { min-width: 100%; }
   }
 </style>
 </head>
@@ -387,25 +414,27 @@
   <!-- PANEL 01: FLOOR -->
   <div class="panel active" id="panel-live">
     <div id="openPosContainer"></div>
-    <div id="guardrailBanner"></div>
 
-    <div class="checklist-hdr">
-      <div>
+    <div class="floor-hdr">
+      <div class="floor-hdr-side">
+        <div class="floor-hdr-label">Direction</div>
         <div class="side-select">
-          <button class="side-btn long active" data-side="long">Long Setup</button>
-          <button class="side-btn short" data-side="short">Short Setup</button>
+          <button class="side-btn long active" data-side="long">Long</button>
+          <button class="side-btn short" data-side="short">Short</button>
         </div>
       </div>
-      <div>
+      <div class="floor-hdr-clock">
         <div class="clock" id="bigClock">—</div>
-        <div class="clock-label">Chicago · CST</div>
+        <div class="clock-label">Chicago · Central Time</div>
       </div>
-      <div class="window-state">
-        <div>Session</div>
-        <div class="v" id="windowState">—</div>
+      <div class="floor-hdr-session">
+        <div class="floor-hdr-label">Entry Window</div>
+        <div class="session-v" id="windowState">—</div>
+        <div class="session-sub" id="windowSub">9:00 – 13:00 CST</div>
       </div>
     </div>
 
+    <div id="guardrailBanner"></div>
     <div id="checklistItems"></div>
 
     <div class="gate" id="gateBanner">
@@ -1223,15 +1252,9 @@ function renderGuardrailBanner() {
   if (g.profitTargetHit) {
     blocks.push(`<div class="guardrail warn"><span>✓ Daily Profit Target Hit · Consider Stopping</span><span class="v">+$${g.todayPnl.toFixed(0)}</span></div>`);
   }
-  if (blocks.length === 0) {
-    const r = activeRules();
-    if (r.risk.losslimit || r.risk.maxtrades) {
-      const ll = r.risk.losslimit ? `Loss limit: $${r.risk.losslimit}` : '';
-      const mt = r.risk.maxtrades ? `Max trades: ${r.risk.maxtrades}` : '';
-      blocks.push(`<div class="guardrail ok"><span>Guardrails Active · ${[ll,mt].filter(Boolean).join(' · ')} · Today: ${g.todayCount} trades, ${g.todayPnl>=0?'+':''}$${g.todayPnl.toFixed(0)}</span><span class="v">OK</span></div>`);
-    }
-  }
+  // Don't show "all OK" banner — too noisy. Status lives in the rulebar instead.
   el.innerHTML = blocks.join('');
+  el.style.display = blocks.length ? '' : 'none';
 }
 
 // ============================================================
@@ -1269,12 +1292,23 @@ function renderChecklist() {
   const el = document.getElementById('checklistItems');
 
   if (bucket.length === 0 || bucket.every(x => !x.trim())) {
-    el.innerHTML = `<div class="empty"><div class="glyph">∅</div>No ${state.side} rules in "${escapeHtml(activeStrategy()?.name||'this strategy')}".<br><span style="font-size:10px; letter-spacing:0.2em;">Head to the Rulebook tab.</span></div>`;
+    el.innerHTML = `
+      <div class="empty-cta">
+        <div class="empty-cta-glyph">∅</div>
+        <div class="empty-cta-title">No ${state.side} rules defined</div>
+        <div class="empty-cta-sub">Strategy: <strong>${escapeHtml(activeStrategy()?.name||'')}</strong></div>
+        <button class="btn-primary" id="emptyGoRules">Open Rulebook →</button>
+      </div>`;
+    document.getElementById('emptyGoRules').addEventListener('click', () => {
+      document.querySelector('[data-panel="rules"]').click();
+    });
     updateGate(0, 0, false);
+    document.getElementById('gateBanner').style.display = 'none';
     document.getElementById('entryForm').style.display = 'none';
     renderGuardrailBanner();
     return;
   }
+  document.getElementById('gateBanner').style.display = '';
 
   el.innerHTML = '';
   let total = 0, done = 0, anyBlackout = false;
@@ -2023,8 +2057,8 @@ function tick() {
   const ws = document.getElementById('windowState');
   // 9 AM - 1 PM CST = 10 AM - 2 PM ET window
   const inWindow = cst.minutes >= 9*60 && cst.minutes < 13*60;
-  ws.textContent = inWindow ? 'OPEN · 9:00–13:00 CST' : 'CLOSED';
-  ws.className = 'v ' + (inWindow ? 'ok' : 'no');
+  ws.textContent = inWindow ? 'OPEN' : 'CLOSED';
+  ws.className = 'session-v ' + (inWindow ? 'ok' : 'no');
 
   const status = document.getElementById('sessionStatus');
   const marketOpen = cst.minutes >= 8*60+30 && cst.minutes < 15*60;
