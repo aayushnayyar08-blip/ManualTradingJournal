@@ -260,6 +260,12 @@
   .adh-cell.a40 { background: rgba(209,73,91,0.5); border-color: var(--red); color: var(--bg); }
   .adh-cell.a0 { background: var(--red); border-color: var(--red); color: var(--bg); }
 
+  /* BACKTEST REPLAY */
+  .replay-hdr { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; background: var(--panel); border: 1px solid var(--amber); border-left: 4px solid var(--amber); margin-bottom: 8px; }
+  .replay-label { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--amber); font-weight: 700; margin-bottom: 4px; }
+  .replay-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .replay-hdr-right button { font-size: 10px; }
+
   /* BACKTEST */
   .drop-zone { border: 1px dashed var(--line); background: var(--bg); padding: 14px; text-align: center; color: var(--dim); cursor: pointer; min-height: 80px; display: flex; align-items: center; justify-content: center; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; position: relative; overflow: hidden; transition: all 0.15s; }
   .drop-zone:hover { border-color: var(--ink); color: var(--ink); }
@@ -542,46 +548,32 @@
   <!-- PANEL 05: BACKTEST -->
   <div class="panel" id="panel-backtest">
     <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
-      <h2 style="font-family:'Fraunces',serif; font-size:28px; font-weight:900; letter-spacing:-0.01em;">Backtest Log</h2>
+      <h2 style="font-family:'Fraunces',serif; font-size:28px; font-weight:900; letter-spacing:-0.01em;">Backtest Replay</h2>
       <div style="font-size:10px; color:var(--dim); letter-spacing:0.2em; text-transform:uppercase;" id="btMeta">— entries</div>
     </div>
-    <div style="font-size:12px; color:var(--dim); font-style:italic; margin-bottom:24px;" id="btStrategyNote">Historical replays for the current strategy.</div>
+    <div style="font-size:12px; color:var(--dim); font-style:italic; margin-bottom:24px;" id="btStrategyNote">Walk a historical setup exactly like you would live. Same checklist, same entry/exit discipline, same stats.</div>
 
-    <div class="card" id="btForm">
-      <div class="card-title"><span>Log a Backtest Entry</span><span class="idx">BT</span></div>
+    <!-- REPLAY STARTER (shown when no replay active) -->
+    <div class="card" id="btStarter">
+      <div class="card-title"><span>Start a New Replay</span><span class="idx">▶</span></div>
       <div class="form-grid">
-        <div class="form-field"><label>Date</label><input type="date" id="bt_date"></div>
-        <div class="form-field"><label>Side</label><select id="bt_side"><option value="long">Long</option><option value="short">Short</option></select></div>
-        <div class="form-field"><label>Instrument</label><input type="text" id="bt_instrument" value="NQ"></div>
-        <div class="form-field"><label>Points (±)</label><input type="number" id="bt_points" step="0.01" placeholder="e.g. 42.5 or -15"></div>
+        <div class="form-field"><label>Replay Date</label><input type="date" id="bt_replay_date"></div>
+        <div class="form-field"><label>Replay Time (CST)</label><input type="text" id="bt_replay_time" placeholder="9:35 AM"></div>
+        <div class="form-field"><label>Side</label><select id="bt_replay_side"><option value="long">Long</option><option value="short">Short</option></select></div>
+        <div class="form-field"><label>Instrument</label><input type="text" id="bt_replay_instrument" value="NQ"></div>
       </div>
-      <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
-        <div class="form-field"><label>R Multiple (opt)</label><input type="number" id="bt_R" step="0.01"></div>
-        <div class="form-field"><label>Entry Time CST (opt)</label><input type="text" id="bt_time" placeholder="9:35 AM"></div>
-        <div class="form-field"><label>Exit Reason (opt)</label><select id="bt_reason"><option value="">—</option><option value="vwap">VWAP cross-back</option><option value="hard">Hard stop</option><option value="noise">Noise re-entry</option><option value="eod">End of session</option><option value="manual">Manual</option></select></div>
-        <div class="form-field"><label>Tag (opt)</label><input type="text" id="bt_tag" placeholder="e.g. trend-day"></div>
-      </div>
-      <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
-        <div class="form-field"><label>Notes</label><textarea id="bt_notes"></textarea></div>
-        <div class="form-field">
-          <label>Screenshot</label>
-          <div class="drop-zone" id="btDrop">
-            <input type="file" id="bt_image" accept="image/*" style="display:none">
-            <div id="dropText">Click or drop<br><span style="font-size:9px;">image file</span></div>
-            <img id="dropPreview" style="display:none;">
-          </div>
-          <button type="button" class="btn-ghost" id="btPaste" style="margin-top:6px;">📋 Paste from clipboard</button>
-        </div>
-      </div>
-      <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
-        <button class="btn-secondary" id="btClear">Clear Form</button>
-        <button class="btn-primary" id="btCommit">Save Entry →</button>
+      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+        <button class="btn-primary" id="startReplay">Begin Replay →</button>
       </div>
     </div>
 
+    <!-- REPLAY SESSION (shown when replay active) -->
+    <div id="btReplaySession" style="display:none;"></div>
+
+    <!-- LOG -->
     <div style="margin-top:32px;">
       <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; border-bottom:1px solid var(--line); padding-bottom:8px;">
-        <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim);">Logged Entries</div>
+        <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim);">Logged Replays</div>
         <div style="display:flex; gap:8px; align-items:center;">
           <button class="btn-secondary" id="btExport" style="padding:6px 14px; font-size:10px;">Export CSV</button>
           <button class="btn-secondary" id="btToggleView" style="padding:6px 14px; font-size:10px;">Grid View</button>
@@ -684,10 +676,11 @@ let state = {
   trades: [],
   backtests: [],
   backtestView: 'list',
+  replay: null, // { date, time, side, instrument, checks, stage: 'checklist'|'entry'|'open', trade: {...} }
   date: getCSTDateKey(),
-  syncStatus: 'local', // local | syncing | synced | error
+  syncStatus: 'local',
   lastSyncTime: null,
-  lockoutOverride: false // user ack'd they broke the loss limit
+  lockoutOverride: false
 };
 
 // ============================================================
@@ -759,6 +752,7 @@ function packState() {
     openTrade: state.openTrade,
     trades: state.trades,
     backtests: state.backtests.map(({image, ...rest}) => rest),
+    replay: state.replay,
     date: state.date,
     lockoutOverride: state.lockoutOverride,
     savedAt: new Date().toISOString()
@@ -773,6 +767,7 @@ function unpackState(data) {
   state.openTrade = data.openTrade || null;
   state.trades = data.trades || [];
   state.backtests = (data.backtests || []).map(b => ({ ...b, image: null }));
+  state.replay = data.replay || null;
   state.date = data.date || getCSTDateKey();
   state.lockoutOverride = data.lockoutOverride || false;
 }
@@ -1730,45 +1725,393 @@ function drawAsciiChart(pts, w, h) {
 }
 
 // ============================================================
-// BACKTEST
+// BACKTEST — REPLAY FLOW
 // ============================================================
 let btImageData = null;
+
 function renderBacktest() {
-  const dateInp = document.getElementById('bt_date');
-  if (!dateInp.value) dateInp.value = getCSTDateKey();
+  const starter = document.getElementById('btStarter');
+  const session = document.getElementById('btReplaySession');
+  if (state.replay) {
+    starter.style.display = 'none';
+    session.style.display = 'block';
+    renderReplaySession();
+  } else {
+    starter.style.display = 'block';
+    session.style.display = 'none';
+    // set defaults
+    const d = document.getElementById('bt_replay_date');
+    if (!d.value) d.value = getCSTDateKey();
+  }
   renderBacktestList();
   renderBacktestSummary();
   const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
   document.getElementById('btMeta').textContent = `${bt.length} ENTRIES`;
-  document.getElementById('btStrategyNote').textContent = `Historical replays for "${activeStrategy()?.name||''}"`;
+  document.getElementById('btStrategyNote').textContent = `Walk a historical setup exactly like you would live. Strategy: "${activeStrategy()?.name||''}"`;
 }
+
+function startReplay() {
+  const date = document.getElementById('bt_replay_date').value;
+  const time = document.getElementById('bt_replay_time').value.trim();
+  const side = document.getElementById('bt_replay_side').value;
+  const instrument = document.getElementById('bt_replay_instrument').value.trim() || 'NQ';
+  if (!date) { toast('Date required', 'err'); return; }
+  if (!time) { toast('Time required', 'err'); return; }
+
+  // check rules exist for this side
+  const r = activeRules();
+  const bucket = side === 'long' ? r.longEntry : r.shortEntry;
+  if (bucket.length === 0 || bucket.every(x => !x.trim())) {
+    toast(`No ${side} rules in this strategy. Add some in the Rulebook first.`, 'err');
+    return;
+  }
+
+  state.replay = {
+    id: 'BT' + Date.now().toString(36).toUpperCase(),
+    date, time, side, instrument,
+    stage: 'checklist', // checklist | entry | open | done
+    checks: {},
+    trade: null,
+    imageId: null,
+    hasImage: false,
+    startedAt: new Date().toISOString()
+  };
+  queueSave();
+  renderBacktest();
+}
+
+function renderReplaySession() {
+  const rp = state.replay;
+  if (!rp) return;
+  const el = document.getElementById('btReplaySession');
+  const r = activeRules();
+  const bucketKey = rp.side === 'long' ? 'longEntry' : 'shortEntry';
+  const bucket = r[bucketKey];
+
+  const sideColor = rp.side === 'long' ? 'var(--green)' : 'var(--red)';
+
+  let body = '';
+
+  // Header — always shown
+  body += `
+    <div class="replay-hdr">
+      <div class="replay-hdr-left">
+        <div class="replay-label">Replay In Progress</div>
+        <div class="replay-title">${rp.date} · ${escapeHtml(rp.time)} <span style="color:${sideColor}; font-weight:700;">${rp.side.toUpperCase()}</span> <span style="color:var(--dim); font-weight:400;">${escapeHtml(rp.instrument)}</span></div>
+      </div>
+      <div class="replay-hdr-right">
+        <button class="btn-secondary" id="abortReplayBtn">✕ Abort Replay</button>
+      </div>
+    </div>
+  `;
+
+  if (rp.stage === 'checklist') {
+    // Show checklist
+    let checklistHtml = '';
+    let total = 0, done = 0;
+    bucket.forEach((rule, i) => {
+      if (!rule.trim()) return;
+      total++;
+      const isChecked = !!rp.checks[i];
+      if (isChecked) done++;
+      checklistHtml += `
+        <div class="check-item${isChecked ? ' checked' : ''}${rp.side === 'short' ? ' short' : ''}" data-replay-check="${i}">
+          <div class="check-box">${isChecked ? '✓' : ''}</div>
+          <div class="check-text">${escapeHtml(rule)}</div>
+          <div class="check-meta">Rule ${String(i+1).padStart(2,'0')}</div>
+        </div>
+      `;
+    });
+
+    const pct = total ? (done/total)*100 : 0;
+    const armed = done === total && total > 0;
+    body += `
+      <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim); margin:20px 0 12px;">
+        Step 1 of 3 · Check the rules that were actually met at ${escapeHtml(rp.time)}
+      </div>
+      <div>${checklistHtml}</div>
+      <div class="gate ${armed ? 'armed' : ''} ${armed && rp.side==='short' ? 'short' : ''}">
+        <div>
+          <div class="gate-status ${armed ? 'armed' : ''} ${armed && rp.side==='short' ? 'short' : ''}">${armed ? (rp.side==='long' ? 'Long · Armed' : 'Short · Armed') : 'Mark What Was True'}</div>
+          <div class="gate-sub">${armed ? 'Proceed to entry below' : 'Tick every rule that actually held. Honest read.'}</div>
+        </div>
+        <div>
+          <div class="gate-fill ${armed ? 'full' : ''} ${armed && rp.side==='short' ? 'short' : ''}"><div class="gate-fill-bar" style="width:${pct}%"></div></div>
+          <div class="gate-count">${done} / ${total}</div>
+        </div>
+      </div>
+      <div style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end;">
+        <button class="btn-secondary" id="replayForceSkip">Skip checklist (log anyway) →</button>
+        <button class="btn-primary" id="replayProceed" ${total === 0 ? 'disabled' : ''}>Proceed to Entry →</button>
+      </div>
+    `;
+  } else if (rp.stage === 'entry') {
+    body += `
+      <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim); margin:20px 0 12px;">
+        Step 2 of 3 · Enter the position
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-field"><label>Entry Price</label><input type="number" id="bt_entry_price" step="0.25"></div>
+          <div class="form-field"><label>Stop (Hard)</label><input type="number" id="bt_entry_stop" step="0.25"></div>
+          <div class="form-field"><label>Contracts</label><input type="number" id="bt_entry_qty" step="1" value="1"></div>
+          <div class="form-field"><label>Conviction (1–5)</label><input type="number" id="bt_entry_conv" min="1" max="5" value="3"></div>
+        </div>
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          <div class="form-field"><label>Setup Notes</label><textarea id="bt_entry_notes" placeholder="One line on the read"></textarea></div>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button class="btn-secondary" id="replayBackToChecklist">← Back</button>
+          <button class="btn-primary" id="replayArm">Arm Position →</button>
+        </div>
+      </div>
+    `;
+  } else if (rp.stage === 'open') {
+    const t = rp.trade;
+    body += `
+      <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim); margin:20px 0 12px;">
+        Step 3 of 3 · Close the position
+      </div>
+      <div class="open-pos" style="margin-bottom: 20px;">
+        <div class="open-pos-hdr">
+          <h2>${escapeHtml(rp.instrument)} <span class="side-pill ${rp.side}">${rp.side.toUpperCase()}</span></h2>
+          <div style="font-size:10px; letter-spacing:0.2em; color:var(--dim); text-transform:uppercase;">REPLAY · ${rp.id}</div>
+        </div>
+        <div class="pos-grid">
+          <div class="pos-stat"><div class="k">Entry</div><div class="v">${t.entry.toFixed(2)}</div></div>
+          <div class="pos-stat"><div class="k">Stop</div><div class="v red">${t.stop.toFixed(2)}</div></div>
+          <div class="pos-stat"><div class="k">Risk · Pts</div><div class="v">${t.riskPoints.toFixed(2)}</div></div>
+          <div class="pos-stat"><div class="k">Risk · $</div><div class="v">$${t.riskDollars.toFixed(0)}</div></div>
+          <div class="pos-stat"><div class="k">Entry Time</div><div class="v">${escapeHtml(rp.time)}</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-field"><label>Exit Price</label><input type="number" id="bt_exit_price" step="0.25"></div>
+          <div class="form-field"><label>Exit Reason</label><select id="bt_exit_reason">
+            <option value="vwap">VWAP cross-back</option>
+            <option value="hard">Hard stop hit</option>
+            <option value="noise">Noise re-entry</option>
+            <option value="eod">End of session</option>
+            <option value="manual">Manual</option>
+          </select></div>
+          <div class="form-field"><label>Exit Time (opt)</label><input type="text" id="bt_exit_time" placeholder="10:47 AM"></div>
+          <div class="form-field"><label>Tag (opt)</label><input type="text" id="bt_exit_tag" placeholder="trend-day"></div>
+        </div>
+        <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
+          <div class="form-field"><label>Exit Notes</label><textarea id="bt_exit_notes" placeholder="What closed it out? What did you learn?"></textarea></div>
+          <div class="form-field">
+            <label>Screenshot</label>
+            <div class="drop-zone" id="btDrop">
+              <input type="file" id="bt_image" accept="image/*" style="display:none">
+              <div id="dropText">Click, drop, or paste<br><span style="font-size:9px;">image file</span></div>
+              <img id="dropPreview" style="display:none;">
+            </div>
+            <button type="button" class="btn-ghost" id="btPaste" style="margin-top:6px;">📋 Paste from clipboard</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button class="btn-secondary" id="replayBackToEntry">← Back</button>
+          <button class="btn-primary" id="replayClose">Close &amp; Log Replay →</button>
+        </div>
+      </div>
+    `;
+  }
+
+  el.innerHTML = body;
+  wireReplayHandlers();
+}
+
+function wireReplayHandlers() {
+  const rp = state.replay;
+  if (!rp) return;
+
+  const abort = document.getElementById('abortReplayBtn');
+  if (abort) abort.addEventListener('click', () => {
+    if (!confirm('Abort this replay? Progress is lost.')) return;
+    state.replay = null;
+    btImageData = null;
+    queueSave();
+    renderBacktest();
+  });
+
+  if (rp.stage === 'checklist') {
+    document.querySelectorAll('[data-replay-check]').forEach(item => {
+      item.addEventListener('click', () => {
+        const i = parseInt(item.dataset.replayCheck);
+        rp.checks[i] = !rp.checks[i];
+        queueSave();
+        renderReplaySession();
+      });
+    });
+    const proceedBtn = document.getElementById('replayProceed');
+    if (proceedBtn) proceedBtn.addEventListener('click', () => {
+      rp.stage = 'entry';
+      queueSave();
+      renderReplaySession();
+    });
+    const skipBtn = document.getElementById('replayForceSkip');
+    if (skipBtn) skipBtn.addEventListener('click', () => {
+      if (!confirm('Skip the checklist? The replay will log with whatever checkmarks are currently set (even zero). Honest replay should mean actually marking them.')) return;
+      rp.stage = 'entry';
+      queueSave();
+      renderReplaySession();
+    });
+  } else if (rp.stage === 'entry') {
+    document.getElementById('replayBackToChecklist').addEventListener('click', () => {
+      rp.stage = 'checklist'; queueSave(); renderReplaySession();
+    });
+    document.getElementById('replayArm').addEventListener('click', () => {
+      const entry = parseFloat(document.getElementById('bt_entry_price').value);
+      const stop = parseFloat(document.getElementById('bt_entry_stop').value);
+      const qty = parseFloat(document.getElementById('bt_entry_qty').value) || 1;
+      const conv = parseInt(document.getElementById('bt_entry_conv').value) || 3;
+      const notes = document.getElementById('bt_entry_notes').value.trim();
+      if (!entry || !stop) { toast('Entry & stop required', 'err'); return; }
+      const riskPoints = Math.abs(entry - stop);
+      const ppp = activeRules().risk.ppp || 20;
+      rp.trade = {
+        entry, stop, qty, conv, notes,
+        riskPoints, riskDollars: riskPoints * ppp * qty
+      };
+      rp.stage = 'open';
+      queueSave();
+      renderReplaySession();
+    });
+  } else if (rp.stage === 'open') {
+    document.getElementById('replayBackToEntry').addEventListener('click', () => {
+      rp.stage = 'entry'; queueSave(); renderReplaySession();
+    });
+    document.getElementById('replayClose').addEventListener('click', closeReplay);
+    wireReplayImage();
+  }
+}
+
+function wireReplayImage() {
+  const drop = document.getElementById('btDrop');
+  const input = document.getElementById('bt_image');
+  if (!drop) return;
+  drop.addEventListener('click', () => input.click());
+  input.addEventListener('change', e => { if (e.target.files[0]) stageImage(e.target.files[0]); });
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) stageImage(e.dataTransfer.files[0]);
+  });
+  document.getElementById('btPaste').addEventListener('click', async () => {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        for (const type of item.types) {
+          if (type.startsWith('image/')) { const blob = await item.getType(type); await stageImage(blob); return; }
+        }
+      }
+      toast('No image in clipboard', 'err');
+    } catch { toast('Clipboard needs permission', 'err'); }
+  });
+}
+
+async function closeReplay() {
+  const rp = state.replay;
+  const t = rp.trade;
+  const exitPrice = parseFloat(document.getElementById('bt_exit_price').value);
+  if (!exitPrice) { toast('Exit price required', 'err'); return; }
+  const reason = document.getElementById('bt_exit_reason').value;
+  const exitTime = document.getElementById('bt_exit_time').value.trim();
+  const tag = document.getElementById('bt_exit_tag').value.trim();
+  const exitNotes = document.getElementById('bt_exit_notes').value.trim();
+
+  const dir = rp.side === 'long' ? 1 : -1;
+  const points = (exitPrice - t.entry) * dir;
+  const ppp = activeRules().risk.ppp || 20;
+  const pnl = points * ppp * t.qty;
+  const R = t.riskPoints > 0 ? points / t.riskPoints : 0;
+
+  // count checked rules
+  const r = activeRules();
+  const bucketKey = rp.side === 'long' ? 'longEntry' : 'shortEntry';
+  const bucket = r[bucketKey];
+  let total = 0, checked = 0;
+  bucket.forEach((rule, i) => {
+    if (!rule.trim()) return;
+    total++;
+    if (rp.checks[i]) checked++;
+  });
+
+  const entry = {
+    id: rp.id,
+    strategyId: state.activeStrategyId,
+    strategyName: activeStrategy()?.name || '',
+    date: rp.date,
+    time: rp.time,
+    side: rp.side,
+    instrument: rp.instrument,
+    entry: t.entry,
+    exitPrice,
+    stop: t.stop,
+    qty: t.qty,
+    riskPoints: t.riskPoints,
+    riskDollars: t.riskDollars,
+    conv: t.conv,
+    setupNotes: t.notes,
+    exitTime,
+    exitReason: reason,
+    exitNotes,
+    tag,
+    points,
+    pnlPoints: points,
+    pnlDollars: pnl,
+    R,
+    win: pnl > 0,
+    entryAdh: { checked, total },
+    hasImage: !!btImageData,
+    stale: false,
+    createdAt: new Date().toISOString()
+  };
+
+  if (btImageData) {
+    try { localStorage.setItem('ledger:img:' + entry.id, btImageData); } catch {}
+    uploadImage(entry.id, btImageData).catch(()=>{});
+  }
+
+  state.backtests.unshift(entry);
+  state.replay = null;
+  btImageData = null;
+  queueSave();
+  renderBacktest();
+  toast(`Replay logged · ${pnl>=0?'+':''}$${pnl.toFixed(0)} (${R>=0?'+':''}${R.toFixed(2)}R)`, pnl >= 0 ? 'ok' : 'err');
+}
+
 function renderBacktestSummary() {
   const wrap = document.getElementById('btSummary');
   const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
   if (bt.length === 0) { wrap.innerHTML = ''; return; }
-  const total = bt.reduce((s,x) => s + (x.points||0), 0);
-  const wins = bt.filter(x => x.points > 0);
-  const losses = bt.filter(x => x.points <= 0);
+  const total = bt.reduce((s,x) => s + (x.pnlDollars||x.points*20||0), 0);
+  const totalPts = bt.reduce((s,x) => s + (x.points||0), 0);
+  const wins = bt.filter(x => (x.pnlDollars||x.points) > 0);
+  const losses = bt.filter(x => (x.pnlDollars||x.points) <= 0);
   const wr = (wins.length / bt.length) * 100;
-  const avgW = wins.length ? wins.reduce((s,x)=>s+x.points,0) / wins.length : 0;
-  const avgL = losses.length ? losses.reduce((s,x)=>s+x.points,0) / losses.length : 0;
-  const best = Math.max(...bt.map(x=>x.points||0));
-  const worst = Math.min(...bt.map(x=>x.points||0));
-  const ppp = activeRules().risk.ppp || 20;
+  const avgR = bt.filter(x => x.R != null).reduce((s,x,_,arr) => s + x.R/arr.length, 0);
+  const totalWins = wins.reduce((s,x)=>s+(x.pnlDollars||0), 0);
+  const totalLosses = Math.abs(losses.reduce((s,x)=>s+(x.pnlDollars||0), 0));
+  const pf = totalLosses > 0 ? totalWins/totalLosses : (totalWins > 0 ? Infinity : 0);
+
   wrap.innerHTML = `
     <div class="bt-summary">
-      <div><div class="k">Net Points</div><div class="v ${total>=0?'green':'red'}">${total>=0?'+':''}${total.toFixed(2)}</div></div>
-      <div><div class="k">Est. P&amp;L @ ${ppp}</div><div class="v ${total>=0?'green':'red'}">${total>=0?'+':''}$${(total*ppp).toFixed(0)}</div></div>
+      <div><div class="k">Net P&amp;L</div><div class="v ${total>=0?'green':'red'}">${total>=0?'+':''}$${total.toFixed(0)}</div></div>
+      <div><div class="k">Net Points</div><div class="v ${totalPts>=0?'green':'red'}">${totalPts>=0?'+':''}${totalPts.toFixed(1)}</div></div>
       <div><div class="k">Win Rate</div><div class="v">${wr.toFixed(1)}%</div></div>
-      <div><div class="k">Avg W / L</div><div class="v">${avgW.toFixed(1)} / ${avgL.toFixed(1)}</div></div>
-      <div><div class="k">Best / Worst</div><div class="v">${best.toFixed(1)} / ${worst.toFixed(1)}</div></div>
+      <div><div class="k">Profit Factor</div><div class="v ${pf>=1?'green':'red'}">${isFinite(pf) ? pf.toFixed(2) : '∞'}</div></div>
+      <div><div class="k">Avg R</div><div class="v ${avgR>=0?'green':'red'}">${avgR>=0?'+':''}${avgR.toFixed(2)}R</div></div>
     </div>`;
 }
+
 function renderBacktestList() {
   const el = document.getElementById('btEntries');
   const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId).sort((a,b) => (b.date||'').localeCompare(a.date||''));
   if (bt.length === 0) {
-    el.innerHTML = `<div class="empty"><div class="glyph">§</div>No backtest entries yet.</div>`;
+    el.innerHTML = `<div class="empty"><div class="glyph">§</div>No replays logged yet.</div>`;
     return;
   }
   if (state.backtestView === 'grid') {
@@ -1778,7 +2121,7 @@ function renderBacktestList() {
   }
   el.querySelectorAll('[data-btdel]').forEach(b => b.addEventListener('click', async e => {
     e.stopPropagation();
-    if (!confirm('Delete this backtest entry?')) return;
+    if (!confirm('Delete this replay?')) return;
     const id = b.dataset.btdel;
     await deleteImage(id);
     state.backtests = state.backtests.filter(x => x.id !== id);
@@ -1792,9 +2135,14 @@ function renderBacktestList() {
     if (img) openLightbox(img); else toast('Image not found', 'err');
   }));
 }
+
 function renderBacktestRow(b) {
-  const pos = b.points >= 0;
+  const pnl = b.pnlDollars != null ? b.pnlDollars : (b.points||0) * 20;
+  const pts = b.points || 0;
+  const pos = pnl >= 0;
   const sideColor = b.side === 'long' ? 'var(--green)' : 'var(--red)';
+  const adhPips = b.entryAdh ? Array.from({length: b.entryAdh.total}, (_, i) =>
+    `<span class="adh-pip ${i < b.entryAdh.checked ? 'on' : ''}"></span>`).join('') : '';
   return `
     <div class="bt-entry">
       <div class="bt-date"><div class="d">${b.date || '—'}</div><div>${escapeHtml(b.time || '')}</div></div>
@@ -1803,26 +2151,32 @@ function renderBacktestRow(b) {
         <div>
           <span style="color:${sideColor}; font-weight:700; letter-spacing:0.15em; font-size:11px;">${(b.side||'').toUpperCase()}</span>
           <span style="color:var(--dim); margin-left:8px;">${escapeHtml(b.instrument || '')}</span>
+          ${b.entry && b.exitPrice ? `<span style="color:var(--dim); margin-left:8px; font-size:11px;">${b.entry.toFixed(2)} → ${b.exitPrice.toFixed(2)}</span>` : ''}
           ${b.tag ? `<span style="margin-left:8px; font-size:10px; padding:2px 6px; background:var(--panel-2); color:var(--amber); letter-spacing:0.15em;">${escapeHtml(b.tag)}</span>` : ''}
           ${b.stale ? '<span class="stale-tag">STALE</span>' : ''}
         </div>
-        ${b.notes ? `<div style="margin-top:6px; font-size:11px;">${escapeHtml(b.notes)}</div>` : ''}
-        <div class="meta">${b.reason ? `<span>Exit: ${escapeHtml(b.reason)}</span>` : ''}${b.R ? `<span>${b.R>=0?'+':''}${parseFloat(b.R).toFixed(2)}R</span>` : ''}</div>
+        ${b.setupNotes || b.exitNotes ? `<div style="margin-top:6px; font-size:11px;">${escapeHtml(b.setupNotes || b.exitNotes || '')}</div>` : ''}
+        <div class="meta">${b.exitReason ? `<span>Exit: ${escapeHtml(b.exitReason)}</span>` : ''}${adhPips ? `<span>Rules: ${adhPips}</span>` : ''}</div>
       </div>
-      <div class="bt-pts"><div class="pts ${pos?'pos':'neg'}">${pos?'+':''}${(b.points||0).toFixed(2)}</div><div class="r">points</div></div>
+      <div class="bt-pts">
+        <div class="pts ${pos?'pos':'neg'}">${pos?'+':''}$${Math.abs(pnl).toFixed(0)}</div>
+        <div class="r">${pts>=0?'+':''}${pts.toFixed(1)} pts · ${b.R != null ? (b.R>=0?'+':'') + b.R.toFixed(2) + 'R' : ''}</div>
+      </div>
       <div><button class="btn-danger" data-btdel="${b.id}">Delete</button></div>
     </div>`;
 }
+
 function renderBacktestCard(b) {
-  const pos = b.points >= 0;
+  const pnl = b.pnlDollars != null ? b.pnlDollars : (b.points||0) * 20;
+  const pos = pnl >= 0;
   const sideColor = b.side === 'long' ? 'var(--green)' : 'var(--red)';
   return `
     <div class="bt-grid-card">
       <div class="thumb" ${b.hasImage ? `data-btview="${b.id}"` : ''}>${b.hasImage ? 'VIEW IMG' : 'NO IMAGE'}</div>
       <div class="body">
-        <div class="hd"><span class="date">${b.date || '—'}</span><span class="pts ${pos?'pos':'neg'}">${pos?'+':''}${(b.points||0).toFixed(2)}</span></div>
-        <div style="font-size:10px; letter-spacing:0.15em; text-transform:uppercase;"><span style="color:${sideColor}; font-weight:700;">${(b.side||'').toUpperCase()}</span><span style="color:var(--dim); margin-left:6px;">${escapeHtml(b.instrument || '')}</span>${b.stale?'<span class="stale-tag">STALE</span>':''}</div>
-        ${b.notes ? `<div class="notes">${escapeHtml(b.notes)}</div>` : ''}
+        <div class="hd"><span class="date">${b.date || '—'}</span><span class="pts ${pos?'pos':'neg'}">${pos?'+':''}$${Math.abs(pnl).toFixed(0)}</span></div>
+        <div style="font-size:10px; letter-spacing:0.15em; text-transform:uppercase;"><span style="color:${sideColor}; font-weight:700;">${(b.side||'').toUpperCase()}</span><span style="color:var(--dim); margin-left:6px;">${escapeHtml(b.instrument || '')}</span>${b.R!=null?`<span style="color:var(--dim); margin-left:6px;">${b.R>=0?'+':''}${b.R.toFixed(2)}R</span>`:''}${b.stale?'<span class="stale-tag">STALE</span>':''}</div>
+        ${b.setupNotes || b.exitNotes ? `<div class="notes">${escapeHtml(b.setupNotes || b.exitNotes || '')}</div>` : ''}
         <div style="display:flex; justify-content:flex-end; margin-top:8px;"><button class="btn-danger" data-btdel="${b.id}" style="font-size:9px; padding:4px 8px;">Delete</button></div>
       </div>
     </div>`;
@@ -1858,39 +2212,32 @@ function compressImage(file, maxDim = 1600, quality = 0.82) {
     reader.readAsDataURL(file);
   });
 }
+
 async function stageImage(file) {
   if (!file || !file.type.startsWith('image/')) { toast('Not an image', 'err'); return; }
   try {
     btImageData = await compressImage(file);
     const preview = document.getElementById('dropPreview');
-    preview.src = btImageData;
-    preview.style.display = 'block';
-    document.getElementById('dropText').style.display = 'none';
+    if (preview) {
+      preview.src = btImageData;
+      preview.style.display = 'block';
+    }
+    const dropText = document.getElementById('dropText');
+    if (dropText) dropText.style.display = 'none';
     toast('Image staged');
   } catch { toast('Image read failed', 'err'); }
 }
+
 function wireBacktestForm() {
-  const drop = document.getElementById('btDrop');
-  const input = document.getElementById('bt_image');
-  drop.addEventListener('click', () => input.click());
-  input.addEventListener('change', e => { if (e.target.files[0]) stageImage(e.target.files[0]); });
-  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
-  drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
-  drop.addEventListener('drop', e => {
-    e.preventDefault(); drop.classList.remove('dragover');
-    if (e.dataTransfer.files[0]) stageImage(e.dataTransfer.files[0]);
+  document.getElementById('startReplay').addEventListener('click', startReplay);
+  document.getElementById('btExport').addEventListener('click', exportBacktests);
+  document.getElementById('btToggleView').addEventListener('click', () => {
+    state.backtestView = state.backtestView === 'list' ? 'grid' : 'list';
+    document.getElementById('btToggleView').textContent = state.backtestView === 'list' ? 'Grid View' : 'List View';
+    renderBacktestList();
   });
-  document.getElementById('btPaste').addEventListener('click', async () => {
-    try {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        for (const type of item.types) {
-          if (type.startsWith('image/')) { const blob = await item.getType(type); await stageImage(blob); return; }
-        }
-      }
-      toast('No image in clipboard', 'err');
-    } catch { toast('Clipboard needs permission', 'err'); }
-  });
+
+  // paste handler for active backtest panel
   document.addEventListener('paste', e => {
     if (!document.getElementById('panel-backtest').classList.contains('active')) return;
     const items = e.clipboardData?.items || [];
@@ -1901,61 +2248,13 @@ function wireBacktestForm() {
       }
     }
   });
-  document.getElementById('btClear').addEventListener('click', clearBacktestForm);
-  document.getElementById('btCommit').addEventListener('click', commitBacktest);
-  document.getElementById('btExport').addEventListener('click', exportBacktests);
-  document.getElementById('btToggleView').addEventListener('click', () => {
-    state.backtestView = state.backtestView === 'list' ? 'grid' : 'list';
-    document.getElementById('btToggleView').textContent = state.backtestView === 'list' ? 'Grid View' : 'List View';
-    renderBacktestList();
-  });
 }
-function clearBacktestForm() {
-  ['bt_points','bt_R','bt_time','bt_tag','bt_notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('bt_instrument').value = 'NQ';
-  document.getElementById('bt_reason').value = '';
-  document.getElementById('bt_side').value = 'long';
-  document.getElementById('bt_date').value = getCSTDateKey();
-  btImageData = null;
-  document.getElementById('dropPreview').style.display = 'none';
-  document.getElementById('dropPreview').src = '';
-  document.getElementById('dropText').style.display = 'block';
-}
-async function commitBacktest() {
-  const date = document.getElementById('bt_date').value;
-  const points = parseFloat(document.getElementById('bt_points').value);
-  if (!date) { toast('Date required', 'err'); return; }
-  if (isNaN(points)) { toast('Points required', 'err'); return; }
-  const id = 'BT' + Date.now().toString(36).toUpperCase();
-  const entry = {
-    id, strategyId: state.activeStrategyId, strategyName: activeStrategy()?.name || '',
-    date, side: document.getElementById('bt_side').value,
-    instrument: document.getElementById('bt_instrument').value.trim() || 'NQ',
-    points,
-    R: parseFloat(document.getElementById('bt_R').value) || null,
-    time: document.getElementById('bt_time').value.trim(),
-    reason: document.getElementById('bt_reason').value,
-    tag: document.getElementById('bt_tag').value.trim(),
-    notes: document.getElementById('bt_notes').value.trim(),
-    hasImage: !!btImageData, stale: false,
-    createdAt: new Date().toISOString()
-  };
-  if (btImageData) {
-    try { localStorage.setItem('ledger:img:' + id, btImageData); } catch {}
-    uploadImage(id, btImageData).catch(()=>{});
-  }
-  state.backtests.unshift(entry);
-  queueSave();
-  clearBacktestForm();
-  btImageData = null;
-  renderBacktest();
-  toast(`Entry logged · ${points>=0?'+':''}${points.toFixed(2)} pts`);
-}
+
 function exportBacktests() {
   const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
   if (bt.length === 0) { toast('Nothing to export', 'err'); return; }
-  const rows = [['id','date','time','side','instrument','points','R','reason','tag','notes','hasImage','stale']];
-  bt.forEach(b => rows.push([b.id, b.date, b.time, b.side, b.instrument, b.points, b.R, b.reason, b.tag, (b.notes||'').replace(/,/g,';').replace(/\n/g,' '), b.hasImage?'Y':'N', b.stale?'Y':'N']));
+  const rows = [['id','date','time','side','instrument','entry','exit','stop','qty','points','pnl','R','reason','tag','rulesChecked','rulesTotal','setupNotes','exitNotes','hasImage','stale']];
+  bt.forEach(b => rows.push([b.id, b.date, b.time, b.side, b.instrument, b.entry, b.exitPrice, b.stop, b.qty, b.points, b.pnlDollars, b.R, b.exitReason, b.tag, b.entryAdh?.checked, b.entryAdh?.total, (b.setupNotes||'').replace(/,/g,';').replace(/\n/g,' '), (b.exitNotes||'').replace(/,/g,';').replace(/\n/g,' '), b.hasImage?'Y':'N', b.stale?'Y':'N']));
   downloadCsv('backtests.csv', rows);
 }
 
