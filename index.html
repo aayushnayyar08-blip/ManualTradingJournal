@@ -260,11 +260,71 @@
   .adh-cell.a40 { background: rgba(209,73,91,0.5); border-color: var(--red); color: var(--bg); }
   .adh-cell.a0 { background: var(--red); border-color: var(--red); color: var(--bg); }
 
-  /* BACKTEST REPLAY */
-  .replay-hdr { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; background: var(--panel); border: 1px solid var(--amber); border-left: 4px solid var(--amber); margin-bottom: 8px; }
-  .replay-label { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--amber); font-weight: 700; margin-bottom: 4px; }
-  .replay-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
-  .replay-hdr-right button { font-size: 10px; }
+  /* BACKTEST — single-screen form */
+  .bt-card { background: var(--panel); border: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; gap: 24px; }
+  .bt-context { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+  .bt-section { display: flex; flex-direction: column; gap: 12px; }
+  .bt-section-hdr { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--amber); border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .bt-section-hdr span:first-child { font-weight: 700; }
+  .bt-section-count { color: var(--dim); font-weight: 400; }
+  .bt-checklist { display: flex; flex-direction: column; }
+  .bt-checklist .check-item { padding: 12px 14px; }
+  .bt-field { display: flex; flex-direction: column; }
+  .bt-field label { font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+  .bt-field input, .bt-field select, .bt-field textarea { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-family: inherit; font-size: 14px; padding: 10px 12px; }
+  .bt-field input:focus, .bt-field select:focus, .bt-field textarea:focus { outline: none; border-color: var(--ink); }
+  .bt-field textarea { min-height: 80px; resize: vertical; font-size: 13px; }
+  .bt-field .side-select { margin-top: 0; }
+  .bt-trade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .bt-notes-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  .bt-calc { padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); font-size: 12px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .bt-calc-k { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+  .bt-calc-v { font-family: 'Fraunces', serif; font-weight: 700; font-size: 14px; }
+  .bt-calc-v.pos { color: var(--green); }
+  .bt-calc-v.neg { color: var(--red); }
+  .bt-calc-sep { color: var(--line); }
+  .bt-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--line); }
+  .drop-zone.has-image { border-style: solid; border-color: var(--green); padding: 8px; }
+
+  @media (max-width: 700px) {
+    .shell { padding: 0 12px 80px !important; }
+    .bt-card { padding: 14px; gap: 18px; }
+    .bt-context { grid-template-columns: 1fr; gap: 12px; padding-bottom: 14px; }
+    .bt-trade-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .bt-notes-grid { grid-template-columns: 1fr; gap: 14px; }
+    .bt-actions { flex-direction: column-reverse; }
+    .bt-actions button { width: 100%; padding: 14px !important; font-size: 12px !important; }
+    .bt-field input, .bt-field select, .bt-field textarea { font-size: 16px; padding: 12px; }
+    .bt-checklist .check-item { padding: 14px 12px; gap: 10px !important; }
+    .bt-checklist .check-item .check-box { width: 26px; height: 26px; font-size: 16px; }
+    .bt-checklist .check-text { font-size: 13px; }
+    .drop-zone { min-height: 100px; font-size: 11px; }
+    .btn-ghost { font-size: 10px; padding: 10px; }
+    /* Masthead more compact */
+    .brand { font-size: 28px !important; }
+    .masthead { padding: 14px 0 10px !important; gap: 10px !important; }
+    .masthead .left, .masthead .right { display: none; }
+    .subhead { font-size: 9px !important; letter-spacing: 0.3em !important; }
+    .rulebar { font-size: 9px; grid-template-columns: 1fr 1fr !important; }
+    .rulebar > * { padding: 4px 8px !important; }
+    .rulebar > *:nth-child(3) { border-left: none !important; }
+    /* Strategy bar */
+    .strategy-bar { padding: 10px 12px; gap: 8px; }
+    .strategy-bar label { display: none; }
+    .strategy-actions button { padding: 6px 10px; font-size: 9px; }
+    /* Tabs */
+    .tab { padding: 12px 4px; font-size: 9px; }
+    /* Panels */
+    .panel { padding: 20px 0; }
+    h2 { font-size: 22px !important; }
+    /* Logged entries */
+    .bt-entry { grid-template-columns: 1fr !important; padding: 12px !important; }
+    .bt-entry .bt-thumb { width: 100%; height: 140px; }
+    .bt-pts .pts { font-size: 18px !important; }
+    /* Summary */
+    .bt-summary { grid-template-columns: 1fr 1fr !important; gap: 10px !important; padding: 14px !important; }
+    .bt-summary .v { font-size: 18px !important; }
+  }
 
   /* BACKTEST */
   .drop-zone { border: 1px dashed var(--line); background: var(--bg); padding: 14px; text-align: center; color: var(--dim); cursor: pointer; min-height: 80px; display: flex; align-items: center; justify-content: center; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; position: relative; overflow: hidden; transition: all 0.15s; }
@@ -548,32 +608,16 @@
   <!-- PANEL 05: BACKTEST -->
   <div class="panel" id="panel-backtest">
     <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
-      <h2 style="font-family:'Fraunces',serif; font-size:28px; font-weight:900; letter-spacing:-0.01em;">Backtest Replay</h2>
+      <h2 style="font-family:'Fraunces',serif; font-size:28px; font-weight:900; letter-spacing:-0.01em;">Backtest</h2>
       <div style="font-size:10px; color:var(--dim); letter-spacing:0.2em; text-transform:uppercase;" id="btMeta">— entries</div>
     </div>
-    <div style="font-size:12px; color:var(--dim); font-style:italic; margin-bottom:24px;" id="btStrategyNote">Walk a historical setup exactly like you would live. Same checklist, same entry/exit discipline, same stats.</div>
+    <div style="font-size:12px; color:var(--dim); font-style:italic; margin-bottom:20px;" id="btStrategyNote">Log a historical trade with full discipline: checklist, entry, exit.</div>
 
-    <!-- REPLAY STARTER (shown when no replay active) -->
-    <div class="card" id="btStarter">
-      <div class="card-title"><span>Start a New Replay</span><span class="idx">▶</span></div>
-      <div class="form-grid">
-        <div class="form-field"><label>Replay Date</label><input type="date" id="bt_replay_date"></div>
-        <div class="form-field"><label>Replay Time (CST)</label><input type="text" id="bt_replay_time" placeholder="9:35 AM"></div>
-        <div class="form-field"><label>Side</label><select id="bt_replay_side"><option value="long">Long</option><option value="short">Short</option></select></div>
-        <div class="form-field"><label>Instrument</label><input type="text" id="bt_replay_instrument" value="NQ"></div>
-      </div>
-      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-        <button class="btn-primary" id="startReplay">Begin Replay →</button>
-      </div>
-    </div>
+    <div id="btForm"></div>
 
-    <!-- REPLAY SESSION (shown when replay active) -->
-    <div id="btReplaySession" style="display:none;"></div>
-
-    <!-- LOG -->
     <div style="margin-top:32px;">
-      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; border-bottom:1px solid var(--line); padding-bottom:8px;">
-        <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim);">Logged Replays</div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; border-bottom:1px solid var(--line); padding-bottom:8px; flex-wrap:wrap; gap:8px;">
+        <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim);">Logged Entries</div>
         <div style="display:flex; gap:8px; align-items:center;">
           <button class="btn-secondary" id="btExport" style="padding:6px 14px; font-size:10px;">Export CSV</button>
           <button class="btn-secondary" id="btToggleView" style="padding:6px 14px; font-size:10px;">Grid View</button>
@@ -1725,345 +1769,283 @@ function drawAsciiChart(pts, w, h) {
 }
 
 // ============================================================
-// BACKTEST — REPLAY FLOW
+// BACKTEST — SINGLE-SCREEN FORM
 // ============================================================
 let btImageData = null;
+let btDraft = { date: '', side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
 
 function renderBacktest() {
-  const starter = document.getElementById('btStarter');
-  const session = document.getElementById('btReplaySession');
-  if (state.replay) {
-    starter.style.display = 'none';
-    session.style.display = 'block';
-    renderReplaySession();
-  } else {
-    starter.style.display = 'block';
-    session.style.display = 'none';
-    // set defaults
-    const d = document.getElementById('bt_replay_date');
-    if (!d.value) d.value = getCSTDateKey();
-  }
-  renderBacktestList();
-  renderBacktestSummary();
-  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
-  document.getElementById('btMeta').textContent = `${bt.length} ENTRIES`;
-  document.getElementById('btStrategyNote').textContent = `Walk a historical setup exactly like you would live. Strategy: "${activeStrategy()?.name||''}"`;
-}
+  // initialize defaults
+  if (!btDraft.date) btDraft.date = getCSTDateKey();
 
-function startReplay() {
-  const date = document.getElementById('bt_replay_date').value;
-  const time = document.getElementById('bt_replay_time').value.trim();
-  const side = document.getElementById('bt_replay_side').value;
-  const instrument = document.getElementById('bt_replay_instrument').value.trim() || 'NQ';
-  if (!date) { toast('Date required', 'err'); return; }
-  if (!time) { toast('Time required', 'err'); return; }
-
-  // check rules exist for this side
   const r = activeRules();
-  const bucket = side === 'long' ? r.longEntry : r.shortEntry;
-  if (bucket.length === 0 || bucket.every(x => !x.trim())) {
-    toast(`No ${side} rules in this strategy. Add some in the Rulebook first.`, 'err');
-    return;
-  }
+  const bucketKey = btDraft.side === 'long' ? 'longEntry' : 'shortEntry';
+  const bucket = r[bucketKey] || [];
 
-  state.replay = {
-    id: 'BT' + Date.now().toString(36).toUpperCase(),
-    date, time, side, instrument,
-    stage: 'checklist', // checklist | entry | open | done
-    checks: {},
-    trade: null,
-    imageId: null,
-    hasImage: false,
-    startedAt: new Date().toISOString()
-  };
-  queueSave();
-  renderBacktest();
-}
-
-function renderReplaySession() {
-  const rp = state.replay;
-  if (!rp) return;
-  const el = document.getElementById('btReplaySession');
-  const r = activeRules();
-  const bucketKey = rp.side === 'long' ? 'longEntry' : 'shortEntry';
-  const bucket = r[bucketKey];
-
-  const sideColor = rp.side === 'long' ? 'var(--green)' : 'var(--red)';
-
-  let body = '';
-
-  // Header — always shown
-  body += `
-    <div class="replay-hdr">
-      <div class="replay-hdr-left">
-        <div class="replay-label">Replay In Progress</div>
-        <div class="replay-title">${rp.date} · ${escapeHtml(rp.time)} <span style="color:${sideColor}; font-weight:700;">${rp.side.toUpperCase()}</span> <span style="color:var(--dim); font-weight:400;">${escapeHtml(rp.instrument)}</span></div>
+  // Build checklist
+  let checklistHtml = '';
+  let total = 0, done = 0;
+  bucket.forEach((rule, i) => {
+    if (!rule.trim()) return;
+    total++;
+    const isChecked = !!btDraft.checks[i];
+    if (isChecked) done++;
+    checklistHtml += `
+      <div class="check-item${isChecked ? ' checked' : ''}${btDraft.side === 'short' ? ' short' : ''}" data-bt-check="${i}">
+        <div class="check-box">${isChecked ? '✓' : ''}</div>
+        <div class="check-text">${escapeHtml(rule)}</div>
+        <div class="check-meta">${String(i+1).padStart(2,'0')}</div>
       </div>
-      <div class="replay-hdr-right">
-        <button class="btn-secondary" id="abortReplayBtn">✕ Abort Replay</button>
+    `;
+  });
+
+  const hasRules = total > 0;
+  const sideColor = btDraft.side === 'long' ? 'var(--green)' : 'var(--red)';
+  const imageStagedClass = btImageData ? 'has-image' : '';
+
+  const formEl = document.getElementById('btForm');
+  formEl.innerHTML = `
+    <div class="bt-card">
+      <!-- Context row: date, side, instrument -->
+      <div class="bt-context">
+        <div class="bt-field">
+          <label>Date</label>
+          <input type="date" id="bt_date" value="${btDraft.date}">
+        </div>
+        <div class="bt-field">
+          <label>Side</label>
+          <div class="side-select">
+            <button type="button" class="side-btn long ${btDraft.side === 'long' ? 'active' : ''}" data-bt-side="long">Long</button>
+            <button type="button" class="side-btn short ${btDraft.side === 'short' ? 'active' : ''}" data-bt-side="short">Short</button>
+          </div>
+        </div>
+        <div class="bt-field">
+          <label>Instrument</label>
+          <input type="text" id="bt_instrument" value="${escapeHtml(btDraft.instrument)}">
+        </div>
+      </div>
+
+      <!-- Checklist -->
+      <div class="bt-section">
+        <div class="bt-section-hdr"><span>Rules Met · ${btDraft.side}</span><span class="bt-section-count">${done} / ${total}</span></div>
+        ${hasRules ? `<div class="bt-checklist">${checklistHtml}</div>` : `
+          <div style="padding:20px; text-align:center; color:var(--dim); font-style:italic; font-size:12px; border:1px dashed var(--line);">
+            No ${btDraft.side} rules defined. Add them in the Rulebook first.
+          </div>`}
+      </div>
+
+      <!-- Entry + Exit -->
+      <div class="bt-section">
+        <div class="bt-section-hdr"><span>Trade</span></div>
+        <div class="bt-trade-grid">
+          <div class="bt-field"><label>Entry</label><input type="number" step="0.25" inputmode="decimal" id="bt_entry" value="${btDraft.entry}"></div>
+          <div class="bt-field"><label>Stop</label><input type="number" step="0.25" inputmode="decimal" id="bt_stop" value="${btDraft.stop}"></div>
+          <div class="bt-field"><label>Exit</label><input type="number" step="0.25" inputmode="decimal" id="bt_exitPrice" value="${btDraft.exitPrice}"></div>
+          <div class="bt-field"><label>Qty</label><input type="number" step="1" inputmode="numeric" id="bt_qty" value="${btDraft.qty}"></div>
+          <div class="bt-field"><label>Exit Reason</label><select id="bt_exitReason">
+            <option value="vwap" ${btDraft.exitReason==='vwap'?'selected':''}>VWAP cross</option>
+            <option value="hard" ${btDraft.exitReason==='hard'?'selected':''}>Hard stop</option>
+            <option value="noise" ${btDraft.exitReason==='noise'?'selected':''}>Noise re-entry</option>
+            <option value="eod" ${btDraft.exitReason==='eod'?'selected':''}>End of session</option>
+            <option value="manual" ${btDraft.exitReason==='manual'?'selected':''}>Manual</option>
+          </select></div>
+          <div class="bt-field"><label>Tag</label><input type="text" id="bt_tag" value="${escapeHtml(btDraft.tag)}" placeholder="trend-day"></div>
+        </div>
+        <div id="bt_calc" class="bt-calc"></div>
+      </div>
+
+      <!-- Notes + Screenshot -->
+      <div class="bt-section">
+        <div class="bt-section-hdr"><span>Notes &amp; Screenshot</span></div>
+        <div class="bt-notes-grid">
+          <div class="bt-field">
+            <label>Notes</label>
+            <textarea id="bt_notes" placeholder="Read on the setup, what happened, what you learned">${escapeHtml(btDraft.notes)}</textarea>
+          </div>
+          <div class="bt-field">
+            <label>Screenshot</label>
+            <div class="drop-zone ${imageStagedClass}" id="btDrop">
+              <input type="file" id="bt_image" accept="image/*" capture="environment" style="display:none">
+              ${btImageData ? `<img src="${btImageData}" style="max-height:120px; max-width:100%;">` : `<div id="dropText">Tap to upload<br><span style="font-size:9px;">or drop / paste</span></div>`}
+            </div>
+            <div style="display:flex; gap:6px; margin-top:6px;">
+              <button type="button" class="btn-ghost" id="btPaste" style="flex:1;">📋 Paste</button>
+              ${btImageData ? `<button type="button" class="btn-ghost" id="btClearImg" style="flex:1; color:var(--red);">✕ Clear</button>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="bt-actions">
+        <button class="btn-secondary" id="btReset">Reset</button>
+        <button class="btn-primary" id="btSave">Save Entry →</button>
       </div>
     </div>
   `;
 
-  if (rp.stage === 'checklist') {
-    // Show checklist
-    let checklistHtml = '';
-    let total = 0, done = 0;
-    bucket.forEach((rule, i) => {
-      if (!rule.trim()) return;
-      total++;
-      const isChecked = !!rp.checks[i];
-      if (isChecked) done++;
-      checklistHtml += `
-        <div class="check-item${isChecked ? ' checked' : ''}${rp.side === 'short' ? ' short' : ''}" data-replay-check="${i}">
-          <div class="check-box">${isChecked ? '✓' : ''}</div>
-          <div class="check-text">${escapeHtml(rule)}</div>
-          <div class="check-meta">Rule ${String(i+1).padStart(2,'0')}</div>
-        </div>
-      `;
-    });
+  renderBacktestList();
+  renderBacktestSummary();
+  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
+  document.getElementById('btMeta').textContent = `${bt.length} ENTRIES`;
+  document.getElementById('btStrategyNote').textContent = `Log a historical trade with full discipline. Strategy: "${activeStrategy()?.name||''}"`;
 
-    const pct = total ? (done/total)*100 : 0;
-    const armed = done === total && total > 0;
-    body += `
-      <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim); margin:20px 0 12px;">
-        Step 1 of 3 · Check the rules that were actually met at ${escapeHtml(rp.time)}
-      </div>
-      <div>${checklistHtml}</div>
-      <div class="gate ${armed ? 'armed' : ''} ${armed && rp.side==='short' ? 'short' : ''}">
-        <div>
-          <div class="gate-status ${armed ? 'armed' : ''} ${armed && rp.side==='short' ? 'short' : ''}">${armed ? (rp.side==='long' ? 'Long · Armed' : 'Short · Armed') : 'Mark What Was True'}</div>
-          <div class="gate-sub">${armed ? 'Proceed to entry below' : 'Tick every rule that actually held. Honest read.'}</div>
-        </div>
-        <div>
-          <div class="gate-fill ${armed ? 'full' : ''} ${armed && rp.side==='short' ? 'short' : ''}"><div class="gate-fill-bar" style="width:${pct}%"></div></div>
-          <div class="gate-count">${done} / ${total}</div>
-        </div>
-      </div>
-      <div style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end;">
-        <button class="btn-secondary" id="replayForceSkip">Skip checklist (log anyway) →</button>
-        <button class="btn-primary" id="replayProceed" ${total === 0 ? 'disabled' : ''}>Proceed to Entry →</button>
-      </div>
-    `;
-  } else if (rp.stage === 'entry') {
-    body += `
-      <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim); margin:20px 0 12px;">
-        Step 2 of 3 · Enter the position
-      </div>
-      <div class="card">
-        <div class="form-grid">
-          <div class="form-field"><label>Entry Price</label><input type="number" id="bt_entry_price" step="0.25"></div>
-          <div class="form-field"><label>Stop (Hard)</label><input type="number" id="bt_entry_stop" step="0.25"></div>
-          <div class="form-field"><label>Contracts</label><input type="number" id="bt_entry_qty" step="1" value="1"></div>
-          <div class="form-field"><label>Conviction (1–5)</label><input type="number" id="bt_entry_conv" min="1" max="5" value="3"></div>
-        </div>
-        <div class="form-grid" style="grid-template-columns: 1fr;">
-          <div class="form-field"><label>Setup Notes</label><textarea id="bt_entry_notes" placeholder="One line on the read"></textarea></div>
-        </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-          <button class="btn-secondary" id="replayBackToChecklist">← Back</button>
-          <button class="btn-primary" id="replayArm">Arm Position →</button>
-        </div>
-      </div>
-    `;
-  } else if (rp.stage === 'open') {
-    const t = rp.trade;
-    body += `
-      <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim); margin:20px 0 12px;">
-        Step 3 of 3 · Close the position
-      </div>
-      <div class="open-pos" style="margin-bottom: 20px;">
-        <div class="open-pos-hdr">
-          <h2>${escapeHtml(rp.instrument)} <span class="side-pill ${rp.side}">${rp.side.toUpperCase()}</span></h2>
-          <div style="font-size:10px; letter-spacing:0.2em; color:var(--dim); text-transform:uppercase;">REPLAY · ${rp.id}</div>
-        </div>
-        <div class="pos-grid">
-          <div class="pos-stat"><div class="k">Entry</div><div class="v">${t.entry.toFixed(2)}</div></div>
-          <div class="pos-stat"><div class="k">Stop</div><div class="v red">${t.stop.toFixed(2)}</div></div>
-          <div class="pos-stat"><div class="k">Risk · Pts</div><div class="v">${t.riskPoints.toFixed(2)}</div></div>
-          <div class="pos-stat"><div class="k">Risk · $</div><div class="v">$${t.riskDollars.toFixed(0)}</div></div>
-          <div class="pos-stat"><div class="k">Entry Time</div><div class="v">${escapeHtml(rp.time)}</div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="form-grid">
-          <div class="form-field"><label>Exit Price</label><input type="number" id="bt_exit_price" step="0.25"></div>
-          <div class="form-field"><label>Exit Reason</label><select id="bt_exit_reason">
-            <option value="vwap">VWAP cross-back</option>
-            <option value="hard">Hard stop hit</option>
-            <option value="noise">Noise re-entry</option>
-            <option value="eod">End of session</option>
-            <option value="manual">Manual</option>
-          </select></div>
-          <div class="form-field"><label>Exit Time (opt)</label><input type="text" id="bt_exit_time" placeholder="10:47 AM"></div>
-          <div class="form-field"><label>Tag (opt)</label><input type="text" id="bt_exit_tag" placeholder="trend-day"></div>
-        </div>
-        <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
-          <div class="form-field"><label>Exit Notes</label><textarea id="bt_exit_notes" placeholder="What closed it out? What did you learn?"></textarea></div>
-          <div class="form-field">
-            <label>Screenshot</label>
-            <div class="drop-zone" id="btDrop">
-              <input type="file" id="bt_image" accept="image/*" style="display:none">
-              <div id="dropText">Click, drop, or paste<br><span style="font-size:9px;">image file</span></div>
-              <img id="dropPreview" style="display:none;">
-            </div>
-            <button type="button" class="btn-ghost" id="btPaste" style="margin-top:6px;">📋 Paste from clipboard</button>
-          </div>
-        </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-          <button class="btn-secondary" id="replayBackToEntry">← Back</button>
-          <button class="btn-primary" id="replayClose">Close &amp; Log Replay →</button>
-        </div>
-      </div>
-    `;
-  }
-
-  el.innerHTML = body;
-  wireReplayHandlers();
+  wireBacktestFormHandlers();
+  updateBacktestCalc();
 }
 
-function wireReplayHandlers() {
-  const rp = state.replay;
-  if (!rp) return;
-
-  const abort = document.getElementById('abortReplayBtn');
-  if (abort) abort.addEventListener('click', () => {
-    if (!confirm('Abort this replay? Progress is lost.')) return;
-    state.replay = null;
-    btImageData = null;
-    queueSave();
-    renderBacktest();
+function wireBacktestFormHandlers() {
+  // Side toggle
+  document.querySelectorAll('[data-bt-side]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btDraft.side = btn.dataset.btSide;
+      btDraft.checks = {}; // reset checks when switching side
+      renderBacktest();
+    });
   });
 
-  if (rp.stage === 'checklist') {
-    document.querySelectorAll('[data-replay-check]').forEach(item => {
-      item.addEventListener('click', () => {
-        const i = parseInt(item.dataset.replayCheck);
-        rp.checks[i] = !rp.checks[i];
-        queueSave();
-        renderReplaySession();
-      });
-    });
-    const proceedBtn = document.getElementById('replayProceed');
-    if (proceedBtn) proceedBtn.addEventListener('click', () => {
-      rp.stage = 'entry';
-      queueSave();
-      renderReplaySession();
-    });
-    const skipBtn = document.getElementById('replayForceSkip');
-    if (skipBtn) skipBtn.addEventListener('click', () => {
-      if (!confirm('Skip the checklist? The replay will log with whatever checkmarks are currently set (even zero). Honest replay should mean actually marking them.')) return;
-      rp.stage = 'entry';
-      queueSave();
-      renderReplaySession();
-    });
-  } else if (rp.stage === 'entry') {
-    document.getElementById('replayBackToChecklist').addEventListener('click', () => {
-      rp.stage = 'checklist'; queueSave(); renderReplaySession();
-    });
-    document.getElementById('replayArm').addEventListener('click', () => {
-      const entry = parseFloat(document.getElementById('bt_entry_price').value);
-      const stop = parseFloat(document.getElementById('bt_entry_stop').value);
-      const qty = parseFloat(document.getElementById('bt_entry_qty').value) || 1;
-      const conv = parseInt(document.getElementById('bt_entry_conv').value) || 3;
-      const notes = document.getElementById('bt_entry_notes').value.trim();
-      if (!entry || !stop) { toast('Entry & stop required', 'err'); return; }
-      const riskPoints = Math.abs(entry - stop);
-      const ppp = activeRules().risk.ppp || 20;
-      rp.trade = {
-        entry, stop, qty, conv, notes,
-        riskPoints, riskDollars: riskPoints * ppp * qty
-      };
-      rp.stage = 'open';
-      queueSave();
-      renderReplaySession();
-    });
-  } else if (rp.stage === 'open') {
-    document.getElementById('replayBackToEntry').addEventListener('click', () => {
-      rp.stage = 'entry'; queueSave(); renderReplaySession();
-    });
-    document.getElementById('replayClose').addEventListener('click', closeReplay);
-    wireReplayImage();
-  }
-}
+  // Date, instrument
+  const dateEl = document.getElementById('bt_date');
+  if (dateEl) dateEl.addEventListener('input', e => { btDraft.date = e.target.value; });
+  const instEl = document.getElementById('bt_instrument');
+  if (instEl) instEl.addEventListener('input', e => { btDraft.instrument = e.target.value; });
 
-function wireReplayImage() {
+  // Checklist
+  document.querySelectorAll('[data-bt-check]').forEach(item => {
+    item.addEventListener('click', () => {
+      const i = parseInt(item.dataset.btCheck);
+      btDraft.checks[i] = !btDraft.checks[i];
+      // re-render just the checklist to avoid losing focus on inputs
+      renderBacktest();
+    });
+  });
+
+  // Numeric fields: live calc
+  ['bt_entry','bt_stop','bt_exitPrice','bt_qty'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', e => {
+      const key = id.replace('bt_', '');
+      btDraft[key] = e.target.value;
+      updateBacktestCalc();
+    });
+  });
+  ['bt_exitReason','bt_tag','bt_notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', e => {
+      const key = id.replace('bt_', '');
+      btDraft[key] = e.target.value;
+    });
+  });
+
+  // Image handling
   const drop = document.getElementById('btDrop');
   const input = document.getElementById('bt_image');
-  if (!drop) return;
-  drop.addEventListener('click', () => input.click());
-  input.addEventListener('change', e => { if (e.target.files[0]) stageImage(e.target.files[0]); });
-  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
-  drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
-  drop.addEventListener('drop', e => {
-    e.preventDefault(); drop.classList.remove('dragover');
-    if (e.dataTransfer.files[0]) stageImage(e.dataTransfer.files[0]);
-  });
-  document.getElementById('btPaste').addEventListener('click', async () => {
+  if (drop) {
+    drop.addEventListener('click', () => input.click());
+    input.addEventListener('change', e => { if (e.target.files[0]) { stageImage(e.target.files[0]).then(() => renderBacktest()); } });
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+    drop.addEventListener('drop', e => {
+      e.preventDefault(); drop.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) stageImage(e.dataTransfer.files[0]).then(() => renderBacktest());
+    });
+  }
+  const pasteBtn = document.getElementById('btPaste');
+  if (pasteBtn) pasteBtn.addEventListener('click', async () => {
     try {
       const items = await navigator.clipboard.read();
       for (const item of items) {
         for (const type of item.types) {
-          if (type.startsWith('image/')) { const blob = await item.getType(type); await stageImage(blob); return; }
+          if (type.startsWith('image/')) { const blob = await item.getType(type); await stageImage(blob); renderBacktest(); return; }
         }
       }
       toast('No image in clipboard', 'err');
-    } catch { toast('Clipboard needs permission', 'err'); }
+    } catch { toast('Paste not available — try drop', 'err'); }
   });
+  const clearImgBtn = document.getElementById('btClearImg');
+  if (clearImgBtn) clearImgBtn.addEventListener('click', () => { btImageData = null; renderBacktest(); });
+
+  // Actions
+  document.getElementById('btReset').addEventListener('click', () => {
+    if (!confirm('Reset the form? Unsaved data will be lost.')) return;
+    btDraft = { date: getCSTDateKey(), side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
+    btImageData = null;
+    renderBacktest();
+  });
+  document.getElementById('btSave').addEventListener('click', saveBacktest);
 }
 
-async function closeReplay() {
-  const rp = state.replay;
-  const t = rp.trade;
-  const exitPrice = parseFloat(document.getElementById('bt_exit_price').value);
-  if (!exitPrice) { toast('Exit price required', 'err'); return; }
-  const reason = document.getElementById('bt_exit_reason').value;
-  const exitTime = document.getElementById('bt_exit_time').value.trim();
-  const tag = document.getElementById('bt_exit_tag').value.trim();
-  const exitNotes = document.getElementById('bt_exit_notes').value.trim();
-
-  const dir = rp.side === 'long' ? 1 : -1;
-  const points = (exitPrice - t.entry) * dir;
+function updateBacktestCalc() {
+  const el = document.getElementById('bt_calc');
+  if (!el) return;
+  const entry = parseFloat(btDraft.entry);
+  const stop = parseFloat(btDraft.stop);
+  const exit = parseFloat(btDraft.exitPrice);
+  const qty = parseFloat(btDraft.qty) || 1;
   const ppp = activeRules().risk.ppp || 20;
-  const pnl = points * ppp * t.qty;
-  const R = t.riskPoints > 0 ? points / t.riskPoints : 0;
+  if (isNaN(entry) || isNaN(stop)) { el.innerHTML = ''; return; }
+  const dir = btDraft.side === 'long' ? 1 : -1;
+  const riskPts = Math.abs(entry - stop);
+  const riskDol = riskPts * ppp * qty;
+  if (isNaN(exit)) {
+    el.innerHTML = `<span class="bt-calc-k">Risk</span> <span class="bt-calc-v">${riskPts.toFixed(2)} pts · $${riskDol.toFixed(0)}</span>`;
+    return;
+  }
+  const pts = (exit - entry) * dir;
+  const pnl = pts * ppp * qty;
+  const R = riskPts > 0 ? pts / riskPts : 0;
+  const pos = pnl >= 0;
+  el.innerHTML = `
+    <span class="bt-calc-k">Risk</span> <span class="bt-calc-v">${riskPts.toFixed(2)} pts · $${riskDol.toFixed(0)}</span>
+    <span class="bt-calc-sep">·</span>
+    <span class="bt-calc-k">Result</span> <span class="bt-calc-v ${pos?'pos':'neg'}">${pos?'+':''}${pts.toFixed(2)} pts · ${pos?'+':''}$${pnl.toFixed(0)} · ${pos?'+':''}${R.toFixed(2)}R</span>
+  `;
+}
 
-  // count checked rules
+async function saveBacktest() {
+  if (!btDraft.date) { toast('Date required', 'err'); return; }
+  const entry = parseFloat(btDraft.entry);
+  const stop = parseFloat(btDraft.stop);
+  const exit = parseFloat(btDraft.exitPrice);
+  const qty = parseFloat(btDraft.qty) || 1;
+  if (isNaN(entry) || isNaN(stop) || isNaN(exit)) { toast('Entry, stop, and exit required', 'err'); return; }
+
   const r = activeRules();
-  const bucketKey = rp.side === 'long' ? 'longEntry' : 'shortEntry';
-  const bucket = r[bucketKey];
+  const bucketKey = btDraft.side === 'long' ? 'longEntry' : 'shortEntry';
+  const bucket = r[bucketKey] || [];
   let total = 0, checked = 0;
   bucket.forEach((rule, i) => {
     if (!rule.trim()) return;
     total++;
-    if (rp.checks[i]) checked++;
+    if (btDraft.checks[i]) checked++;
   });
 
-  const entry = {
-    id: rp.id,
+  const ppp = r.risk.ppp || 20;
+  const dir = btDraft.side === 'long' ? 1 : -1;
+  const riskPoints = Math.abs(entry - stop);
+  const riskDollars = riskPoints * ppp * qty;
+  const points = (exit - entry) * dir;
+  const pnlDollars = points * ppp * qty;
+  const R = riskPoints > 0 ? points / riskPoints : 0;
+
+  const id = 'BT' + Date.now().toString(36).toUpperCase();
+  const record = {
+    id,
     strategyId: state.activeStrategyId,
     strategyName: activeStrategy()?.name || '',
-    date: rp.date,
-    time: rp.time,
-    side: rp.side,
-    instrument: rp.instrument,
-    entry: t.entry,
-    exitPrice,
-    stop: t.stop,
-    qty: t.qty,
-    riskPoints: t.riskPoints,
-    riskDollars: t.riskDollars,
-    conv: t.conv,
-    setupNotes: t.notes,
-    exitTime,
-    exitReason: reason,
-    exitNotes,
-    tag,
-    points,
-    pnlPoints: points,
-    pnlDollars: pnl,
-    R,
-    win: pnl > 0,
+    date: btDraft.date,
+    side: btDraft.side,
+    instrument: btDraft.instrument.trim() || 'NQ',
+    entry, stop, exitPrice: exit, qty,
+    riskPoints, riskDollars,
+    points, pnlPoints: points, pnlDollars, R,
+    win: pnlDollars > 0,
+    exitReason: btDraft.exitReason,
+    tag: btDraft.tag.trim(),
+    notes: btDraft.notes.trim(),
+    setupNotes: btDraft.notes.trim(), // compat
     entryAdh: { checked, total },
     hasImage: !!btImageData,
     stale: false,
@@ -2071,17 +2053,20 @@ async function closeReplay() {
   };
 
   if (btImageData) {
-    try { localStorage.setItem('ledger:img:' + entry.id, btImageData); } catch {}
-    uploadImage(entry.id, btImageData).catch(()=>{});
+    try { localStorage.setItem('ledger:img:' + id, btImageData); } catch {}
+    uploadImage(id, btImageData).catch(()=>{});
   }
 
-  state.backtests.unshift(entry);
-  state.replay = null;
-  btImageData = null;
+  state.backtests.unshift(record);
   queueSave();
+
+  // reset form for next entry
+  btDraft = { date: getCSTDateKey(), side: btDraft.side, instrument: btDraft.instrument, checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
+  btImageData = null;
   renderBacktest();
-  toast(`Replay logged · ${pnl>=0?'+':''}$${pnl.toFixed(0)} (${R>=0?'+':''}${R.toFixed(2)}R)`, pnl >= 0 ? 'ok' : 'err');
+  toast(`Logged · ${pnlDollars>=0?'+':''}$${pnlDollars.toFixed(0)} (${R>=0?'+':''}${R.toFixed(2)}R)`, pnlDollars >= 0 ? 'ok' : 'err');
 }
+
 
 function renderBacktestSummary() {
   const wrap = document.getElementById('btSummary');
@@ -2229,7 +2214,6 @@ async function stageImage(file) {
 }
 
 function wireBacktestForm() {
-  document.getElementById('startReplay').addEventListener('click', startReplay);
   document.getElementById('btExport').addEventListener('click', exportBacktests);
   document.getElementById('btToggleView').addEventListener('click', () => {
     state.backtestView = state.backtestView === 'list' ? 'grid' : 'list';
@@ -2237,14 +2221,14 @@ function wireBacktestForm() {
     renderBacktestList();
   });
 
-  // paste handler for active backtest panel
-  document.addEventListener('paste', e => {
+  // paste handler for active backtest panel — stages image then re-renders
+  document.addEventListener('paste', async e => {
     if (!document.getElementById('panel-backtest').classList.contains('active')) return;
     const items = e.clipboardData?.items || [];
     for (const item of items) {
       if (item.type.startsWith('image/')) {
         const blob = item.getAsFile();
-        if (blob) { stageImage(blob); e.preventDefault(); return; }
+        if (blob) { await stageImage(blob); e.preventDefault(); renderBacktest(); return; }
       }
     }
   });
