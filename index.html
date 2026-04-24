@@ -1561,6 +1561,8 @@ function renderOpenPosition() {
         <div class="form-field"><label>Exit Price</label><input type="number" id="ex_price" step="0.25"></div>
         <div class="form-field"><label>Exit Reason</label><select id="ex_reason">
           <option value="vwap">VWAP cross-back</option>
+          <option value="tp">Take profit</option>
+          <option value="sl">Stop loss</option>
           <option value="hard">Hard stop hit</option>
           <option value="noise">Noise re-entry</option>
           <option value="eod">End of session</option>
@@ -1844,6 +1846,8 @@ function renderBacktest() {
           <div class="bt-field"><label>Qty</label><input type="number" step="1" inputmode="numeric" id="bt_qty" value="${btDraft.qty}"></div>
           <div class="bt-field"><label>Exit Reason</label><select id="bt_exitReason">
             <option value="vwap" ${btDraft.exitReason==='vwap'?'selected':''}>VWAP cross</option>
+            <option value="tp" ${btDraft.exitReason==='tp'?'selected':''}>Take profit</option>
+            <option value="sl" ${btDraft.exitReason==='sl'?'selected':''}>Stop loss</option>
             <option value="hard" ${btDraft.exitReason==='hard'?'selected':''}>Hard stop</option>
             <option value="noise" ${btDraft.exitReason==='noise'?'selected':''}>Noise re-entry</option>
             <option value="eod" ${btDraft.exitReason==='eod'?'selected':''}>End of session</option>
