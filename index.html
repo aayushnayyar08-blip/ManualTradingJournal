@@ -610,10 +610,23 @@
     <div class="entry-form" id="entryForm" style="display:none">
       <div class="entry-form-hdr">Commit the Position</div>
       <div class="form-grid">
-        <div class="form-field"><label>Instrument</label><input type="text" id="f_instrument" value="NQ"></div>
+        <div class="form-field">
+          <label>Contract</label>
+          <select id="f_instrument"></select>
+        </div>
         <div class="form-field"><label>Entry Price</label><input type="number" id="f_entry" step="0.25"></div>
         <div class="form-field"><label>Stop (Hard)</label><input type="number" id="f_stop" step="0.25"></div>
-        <div class="form-field"><label>Contracts</label><input type="number" id="f_qty" step="1" value="1"></div>
+        <div class="form-field">
+          <label>Contracts <span id="f_qty_auto_label" style="color:var(--amber); font-weight:700;">· AUTO</span></label>
+          <input type="number" id="f_qty" step="1" value="1">
+        </div>
+      </div>
+      <div id="f_risk_hint" style="font-size:11px; color:var(--dim); margin-top:-8px; margin-bottom:8px; letter-spacing:0.05em;"></div>
+      <div class="form-grid" style="grid-template-columns: 1fr 1fr;" id="f_customPppRow" style="display:none;">
+        <div class="form-field" id="f_customPppWrap" style="display:none;">
+          <label>Custom $/pt</label>
+          <input type="number" id="f_customPpp" step="0.01" placeholder="e.g. 12.50">
+        </div>
       </div>
       <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
         <div class="form-field"><label>Context / Notes</label><textarea id="f_notes" placeholder="One line on the setup."></textarea></div>
@@ -803,6 +816,46 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = 'https://wtjkmzosnpewxudzmyrh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0amttem9zbnBld3h1ZHpteXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzEwNjksImV4cCI6MjA5MjU0NzA2OX0.NFbay28JKg1uTFSzBMf_my6JcYb8dqKFN1QiPvZzVGE';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// CONTRACT SPECS
+// ============================================================
+const CONTRACT_SPECS = {
+  'NQ':  { label: 'NQ · Nasdaq',         ppp: 20 },
+  'MNQ': { label: 'MNQ · Micro Nasdaq',  ppp: 2 },
+  'ES':  { label: 'ES · S&P 500',        ppp: 50 },
+  'MES': { label: 'MES · Micro S&P',     ppp: 5 },
+  'YM':  { label: 'YM · Dow',            ppp: 5 },
+  'MYM': { label: 'MYM · Micro Dow',     ppp: 0.50 },
+  'RTY': { label: 'RTY · Russell',       ppp: 50 },
+  'M2K': { label: 'M2K · Micro Russell', ppp: 5 },
+  'CL':  { label: 'CL · Crude Oil',      ppp: 1000 },
+  'MCL': { label: 'MCL · Micro Crude',   ppp: 100 },
+  'GC':  { label: 'GC · Gold',           ppp: 100 },
+  'MGC': { label: 'MGC · Micro Gold',    ppp: 10 },
+  'CUSTOM': { label: 'Custom',           ppp: null }
+};
+
+function contractOptions(selected) {
+  return Object.entries(CONTRACT_SPECS).map(([key, spec]) =>
+    `<option value="${key}" ${selected === key ? 'selected' : ''}>${spec.label}${spec.ppp != null ? ' · $' + spec.ppp + '/pt' : ''}</option>`
+  ).join('');
+}
+
+function pppForInstrument(instrument, fallback) {
+  const spec = CONTRACT_SPECS[instrument];
+  if (spec && spec.ppp != null) return spec.ppp;
+  return fallback != null ? fallback : 20;
+}
+
+function updateLiveCustomPppVis() {
+  const sel = document.getElementById('f_instrument');
+  const wrap = document.getElementById('f_customPppWrap');
+  if (!sel || !wrap) return;
+  wrap.style.display = sel.value === 'CUSTOM' ? '' : 'none';
+  const row = document.getElementById('f_customPppRow');
+  if (row) row.style.display = sel.value === 'CUSTOM' ? 'grid' : 'none';
+}
 
 // ============================================================
 // CORE STATE
@@ -1140,6 +1193,23 @@ function activeRules() {
 function ruleId(bucket, idx) {
   const s = activeStrategy();
   return `${s.id}:${bucket}:${idx}`;
+}
+
+// Max contracts such that (risk_points * $/point * qty) <= risk_budget_$
+// where risk_budget_$ = equity * risk% / 100
+// pppOverride lets callers pass the selected instrument's $/pt (falls back to strategy default)
+function computeAutoQty(entry, stop, pppOverride) {
+  if (isNaN(entry) || isNaN(stop) || entry === stop) return null;
+  const r = activeRules().risk || {};
+  const equity = parseFloat(r.equity) || 0;
+  const riskPct = parseFloat(r.risk) || 0;
+  const ppp = pppOverride != null && !isNaN(pppOverride) ? pppOverride : (parseFloat(r.ppp) || 0);
+  if (equity <= 0 || riskPct <= 0 || ppp <= 0) return null;
+  const riskBudget = equity * (riskPct / 100);
+  const riskPerContract = Math.abs(entry - stop) * ppp;
+  if (riskPerContract <= 0) return null;
+  const maxQty = Math.floor(riskBudget / riskPerContract);
+  return { qty: Math.max(0, maxQty), budget: riskBudget, perContract: riskPerContract, ppp };
 }
 function renderStrategyPicker() {
   const sel = document.getElementById('strategySelect');
@@ -1510,7 +1580,20 @@ function renderChecklist() {
   updateGate(done, total, locked, { anyBlackout, ...g });
 
   if (done === total && total > 0 && !state.openTrade && !locked) {
-    document.getElementById('entryForm').style.display = 'block';
+    const form = document.getElementById('entryForm');
+    const wasHidden = form.style.display === 'none';
+    form.style.display = 'block';
+    // Populate contract select if not done
+    const sel = document.getElementById('f_instrument');
+    if (sel && !sel.innerHTML.trim()) {
+      sel.innerHTML = contractOptions('NQ');
+      sel.addEventListener('change', updateLiveCustomPppVis);
+      updateLiveCustomPppVis();
+    }
+    if (wasHidden) {
+      liveQtyManual = false; // reset whenever form freshly shown
+      updateLiveAutoQty();
+    }
   } else {
     document.getElementById('entryForm').style.display = 'none';
   }
@@ -1572,19 +1655,91 @@ document.getElementById('cancelEntry').addEventListener('click', () => {
   renderChecklist();
 });
 
+// Auto-sizing for the live entry form
+let liveQtyManual = false;
+function updateLiveAutoQty() {
+  const entryEl = document.getElementById('f_entry');
+  const stopEl = document.getElementById('f_stop');
+  const qtyEl = document.getElementById('f_qty');
+  const hintEl = document.getElementById('f_risk_hint');
+  const autoLabel = document.getElementById('f_qty_auto_label');
+  if (!entryEl || !stopEl || !qtyEl) return;
+
+  const entry = parseFloat(entryEl.value);
+  const stop = parseFloat(stopEl.value);
+
+  // Figure out the ppp for the currently selected instrument
+  const instSel = document.getElementById('f_instrument');
+  const instrument = instSel ? instSel.value : 'NQ';
+  const customPpp = parseFloat(document.getElementById('f_customPpp')?.value);
+  const ppp = instrument === 'CUSTOM'
+    ? (isNaN(customPpp) ? null : customPpp)
+    : pppForInstrument(instrument, activeRules().risk.ppp);
+
+  if (isNaN(entry) || isNaN(stop) || entry === stop) {
+    hintEl.textContent = '';
+    autoLabel.style.display = liveQtyManual ? 'none' : '';
+    return;
+  }
+
+  const res = computeAutoQty(entry, stop, ppp);
+  if (!res) {
+    hintEl.innerHTML = `<span style="color:var(--red);">⚠ Set Account Equity, Risk %, and $/pt in Rulebook to enable auto-sizing</span>`;
+    autoLabel.style.display = 'none';
+    return;
+  }
+
+  if (!liveQtyManual) {
+    qtyEl.value = res.qty;
+    autoLabel.style.display = '';
+  } else {
+    autoLabel.style.display = 'none';
+  }
+
+  const currentQty = parseFloat(qtyEl.value) || 0;
+  const actualRisk = res.perContract * currentQty;
+  const overBudget = actualRisk > res.budget + 0.01;
+  hintEl.innerHTML = `
+    <span style="color:var(--dim);">Budget: $${res.budget.toFixed(0)}</span>
+    <span style="color:var(--line); margin:0 6px;">·</span>
+    <span style="color:var(--dim);">Per contract: $${res.perContract.toFixed(0)}</span>
+    <span style="color:var(--line); margin:0 6px;">·</span>
+    <span style="color:var(--dim);">Max: ${res.qty}</span>
+    <span style="color:var(--line); margin:0 6px;">·</span>
+    <span style="color:${overBudget ? 'var(--red)' : 'var(--green)'}; font-weight:700;">Actual risk: $${actualRisk.toFixed(0)}${overBudget ? ' — OVER BUDGET' : ''}</span>
+  `;
+}
+// Wire listeners (use event delegation so they survive re-renders)
+document.addEventListener('input', e => {
+  if (e.target.id === 'f_entry' || e.target.id === 'f_stop') {
+    liveQtyManual = false; // re-auto when key inputs change
+    updateLiveAutoQty();
+  } else if (e.target.id === 'f_qty') {
+    liveQtyManual = true;
+    updateLiveAutoQty();
+  } else if (e.target.id === 'f_instrument' || e.target.id === 'f_customPpp') {
+    updateLiveAutoQty();
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'f_instrument') updateLiveAutoQty();
+});
+
 document.getElementById('commitEntry').addEventListener('click', async () => {
   const entry = parseFloat(document.getElementById('f_entry').value);
   const stop = parseFloat(document.getElementById('f_stop').value);
   const qty = parseFloat(document.getElementById('f_qty').value) || 1;
-  const instrument = document.getElementById('f_instrument').value.trim() || 'NQ';
+  const instrument = document.getElementById('f_instrument').value || 'NQ';
+  const customPpp = parseFloat(document.getElementById('f_customPpp').value);
   const notes = document.getElementById('f_notes').value.trim();
   const conv = parseInt(document.getElementById('f_conv').value) || 3;
 
   if (!entry || !stop) { toast('Entry & stop required', 'err'); return; }
+  if (instrument === 'CUSTOM' && !customPpp) { toast('Custom $/pt required', 'err'); return; }
 
   const r = activeRules();
+  const ppp = instrument === 'CUSTOM' ? customPpp : pppForInstrument(instrument, r.risk.ppp);
   const riskPoints = Math.abs(entry - stop);
-  const ppp = r.risk.ppp || 20;
   const riskDollars = riskPoints * ppp * qty;
 
   const bucket = state.side === 'long' ? r.longEntry : r.shortEntry;
@@ -1605,7 +1760,7 @@ document.getElementById('commitEntry').addEventListener('click', async () => {
     strategyId: state.activeStrategyId,
     strategyName: activeStrategy()?.name || '',
     side: state.side,
-    instrument, entry, stop, qty,
+    instrument, ppp, entry, stop, qty,
     riskPoints, riskDollars, notes, conv,
     entryTime: new Date().toISOString(),
     entryCST: formatClockAmPm(getCST().h, getCST().m),
@@ -1618,6 +1773,7 @@ document.getElementById('commitEntry').addEventListener('click', async () => {
   renderOpenPosition();
   toast('Position armed — good hunting');
   ['f_entry','f_stop','f_notes'].forEach(id => document.getElementById(id).value = '');
+  liveQtyManual = false;
 });
 
 // ============================================================
@@ -1705,7 +1861,7 @@ function closeOpenPosition() {
   const t = state.openTrade;
   const dir = t.side === 'long' ? 1 : -1;
   const points = (price - t.entry) * dir;
-  const ppp = activeRules().risk.ppp || 20;
+  const ppp = t.ppp != null ? t.ppp : pppForInstrument(t.instrument, activeRules().risk.ppp);
   const pnl = points * ppp * t.qty;
   const r = t.riskPoints > 0 ? points / t.riskPoints : 0;
 
@@ -1887,7 +2043,7 @@ function drawAsciiChart(pts, w, h) {
 // BACKTEST — CALENDAR FLOW
 // ============================================================
 let btImageData = null;
-let btDraft = { date: '', side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
+let btDraft = { date: '', side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '', qtyManual: false };
 let btCalMonth = null; // {year, month} — 0-indexed month
 let btEditingId = null; // id of backtest being edited (null = new)
 
@@ -2201,7 +2357,7 @@ function openDayForm(dateKey, existing) {
       fetchImage(existing.id).then(img => { if (img) { btImageData = img; renderBacktestFormInDrawer(dateKey); } });
     }
   } else {
-    btDraft = { date: dateKey, side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
+    btDraft = { date: dateKey, side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '', qtyManual: false };
     btImageData = null;
   }
   renderBacktestFormInDrawer(dateKey);
@@ -2250,8 +2406,16 @@ function renderBacktestFormInDrawer(dateKey) {
               <button type="button" class="side-btn short ${btDraft.side === 'short' ? 'active' : ''}" data-bt-side="short">Short</button>
             </div>
           </div>
-          <div class="bt-field"><label>Instrument</label><input type="text" id="bt_instrument" value="${escapeHtml(btDraft.instrument)}"></div>
+          <div class="bt-field">
+            <label>Contract</label>
+            <select id="bt_instrument">${contractOptions(CONTRACT_SPECS[btDraft.instrument] ? btDraft.instrument : 'NQ')}</select>
+          </div>
         </div>
+        ${btDraft.instrument === 'CUSTOM' ? `
+        <div class="bt-field" style="margin-top:12px;">
+          <label>Custom $/pt</label>
+          <input type="number" step="0.01" id="bt_customPpp" value="${btDraft.customPpp || ''}" placeholder="e.g. 12.50">
+        </div>` : ''}
       </div>
 
       <div class="bt-section">
@@ -2315,6 +2479,16 @@ function renderBacktestFormInDrawer(dateKey) {
   });
 
   wireBacktestFormHandlersInDrawer(dateKey);
+
+  // Auto-size if entry & stop are set and user hasn't manually overridden
+  if (!btDraft.qtyManual) {
+    const res = computeAutoQty(parseFloat(btDraft.entry), parseFloat(btDraft.stop), btDraftPpp());
+    if (res) {
+      btDraft.qty = String(res.qty);
+      const qtyEl = document.getElementById('bt_qty');
+      if (qtyEl) qtyEl.value = res.qty;
+    }
+  }
   updateBacktestCalc();
 }
 
@@ -2328,7 +2502,12 @@ function wireBacktestFormHandlersInDrawer(dateKey) {
   });
 
   const instEl = document.getElementById('bt_instrument');
-  if (instEl) instEl.addEventListener('input', e => { btDraft.instrument = e.target.value; });
+  if (instEl) instEl.addEventListener('change', e => {
+    btDraft.instrument = e.target.value;
+    renderBacktestFormInDrawer(dateKey);
+  });
+  const customPppEl = document.getElementById('bt_customPpp');
+  if (customPppEl) customPppEl.addEventListener('input', e => { btDraft.customPpp = parseFloat(e.target.value) || null; updateBacktestCalc(); });
 
   document.querySelectorAll('[data-bt-check]').forEach(item => {
     item.addEventListener('click', () => {
@@ -2344,6 +2523,17 @@ function wireBacktestFormHandlersInDrawer(dateKey) {
     el.addEventListener('input', e => {
       const key = id.replace('bt_', '');
       btDraft[key] = e.target.value;
+      if (id === 'bt_entry' || id === 'bt_stop') {
+        btDraft.qtyManual = false; // re-auto
+        const res = computeAutoQty(parseFloat(btDraft.entry), parseFloat(btDraft.stop), btDraftPpp());
+        if (res) {
+          btDraft.qty = String(res.qty);
+          const qtyEl = document.getElementById('bt_qty');
+          if (qtyEl) qtyEl.value = res.qty;
+        }
+      } else if (id === 'bt_qty') {
+        btDraft.qtyManual = true;
+      }
       updateBacktestCalc();
     });
   });
@@ -2385,13 +2575,19 @@ function wireBacktestFormHandlersInDrawer(dateKey) {
 
   document.getElementById('btReset').addEventListener('click', () => {
     if (!confirm('Reset the form?')) return;
-    btDraft = { date: dateKey, side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
+    btDraft = { date: dateKey, side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '', qtyManual: false };
     btImageData = null;
     renderBacktestFormInDrawer(dateKey);
   });
   document.getElementById('btSave').addEventListener('click', () => saveBacktestFromDrawer(dateKey));
 }
 
+
+function btDraftPpp() {
+  return btDraft.instrument === 'CUSTOM'
+    ? (parseFloat(btDraft.customPpp) || 20)
+    : pppForInstrument(btDraft.instrument, 20);
+}
 
 function updateBacktestCalc() {
   const el = document.getElementById('bt_calc');
@@ -2400,13 +2596,25 @@ function updateBacktestCalc() {
   const stop = parseFloat(btDraft.stop);
   const exit = parseFloat(btDraft.exitPrice);
   const qty = parseFloat(btDraft.qty) || 1;
-  const ppp = activeRules().risk.ppp || 20;
+  const ppp = btDraftPpp();
   if (isNaN(entry) || isNaN(stop)) { el.innerHTML = ''; return; }
   const dir = btDraft.side === 'long' ? 1 : -1;
   const riskPts = Math.abs(entry - stop);
   const riskDol = riskPts * ppp * qty;
+
+  // Budget/auto-sizing info line
+  const auto = computeAutoQty(entry, stop, ppp);
+  let budgetLine = '';
+  if (auto) {
+    const overBudget = riskDol > auto.budget + 0.01;
+    const autoTag = btDraft.qtyManual ? '' : ' <span style="color:var(--amber); font-weight:700;">· AUTO</span>';
+    budgetLine = `<div style="font-size:10px; color:var(--dim); margin-top:4px; letter-spacing:0.05em;">Budget: $${auto.budget.toFixed(0)} · Per contract: $${auto.perContract.toFixed(0)} · Max: ${auto.qty}${autoTag}${overBudget ? ' · <span style="color:var(--red); font-weight:700;">OVER BUDGET</span>' : ''}</div>`;
+  } else {
+    budgetLine = `<div style="font-size:10px; color:var(--red); margin-top:4px;">⚠ Auto-sizing needs Equity, Risk %, and $/pt in Rulebook</div>`;
+  }
+
   if (isNaN(exit)) {
-    el.innerHTML = `<span class="bt-calc-k">Risk</span> <span class="bt-calc-v">${riskPts.toFixed(2)} pts · $${riskDol.toFixed(0)}</span>`;
+    el.innerHTML = `<div><span class="bt-calc-k">Contract</span> <span class="bt-calc-v">${CONTRACT_SPECS[btDraft.instrument]?.label || btDraft.instrument} · $${ppp}/pt</span> <span class="bt-calc-sep">·</span> <span class="bt-calc-k">Risk</span> <span class="bt-calc-v">${riskPts.toFixed(2)} pts · $${riskDol.toFixed(0)}</span></div>${budgetLine}`;
     return;
   }
   const pts = (exit - entry) * dir;
@@ -2414,9 +2622,9 @@ function updateBacktestCalc() {
   const R = riskPts > 0 ? pts / riskPts : 0;
   const pos = pnl >= 0;
   el.innerHTML = `
-    <span class="bt-calc-k">Risk</span> <span class="bt-calc-v">${riskPts.toFixed(2)} pts · $${riskDol.toFixed(0)}</span>
+    <div><span class="bt-calc-k">Risk</span> <span class="bt-calc-v">${riskPts.toFixed(2)} pts · $${riskDol.toFixed(0)}</span>
     <span class="bt-calc-sep">·</span>
-    <span class="bt-calc-k">Result</span> <span class="bt-calc-v ${pos?'pos':'neg'}">${pos?'+':''}${pts.toFixed(2)} pts · ${pos?'+':''}$${pnl.toFixed(0)} · ${pos?'+':''}${R.toFixed(2)}R</span>
+    <span class="bt-calc-k">Result</span> <span class="bt-calc-v ${pos?'pos':'neg'}">${pos?'+':''}${pts.toFixed(2)} pts · ${pos?'+':''}$${pnl.toFixed(0)} · ${pos?'+':''}${R.toFixed(2)}R</span></div>${budgetLine}
   `;
 }
 
@@ -2477,7 +2685,7 @@ async function saveBacktest() {
   queueSave();
 
   // reset form for next entry
-  btDraft = { date: getCSTDateKey(), side: btDraft.side, instrument: btDraft.instrument, checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
+  btDraft = { date: getCSTDateKey(), side: btDraft.side, instrument: btDraft.instrument, checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '', qtyManual: false };
   btImageData = null;
   renderBacktest();
   toast(`Logged · ${pnlDollars>=0?'+':''}$${pnlDollars.toFixed(0)} (${R>=0?'+':''}${R.toFixed(2)}R)`, pnlDollars >= 0 ? 'ok' : 'err');
@@ -2579,6 +2787,7 @@ async function saveBacktestFromDrawer(dateKey) {
   const exit = parseFloat(btDraft.exitPrice);
   const qty = parseFloat(btDraft.qty) || 1;
   if (isNaN(entry) || isNaN(stop) || isNaN(exit)) { toast('Entry, stop, and exit required', 'err'); return; }
+  if (btDraft.instrument === 'CUSTOM' && !btDraft.customPpp) { toast('Custom $/pt required', 'err'); return; }
 
   const r = activeRules();
   const bucketKey = btDraft.side === 'long' ? 'longEntry' : 'shortEntry';
@@ -2590,7 +2799,9 @@ async function saveBacktestFromDrawer(dateKey) {
     if (btDraft.checks[i]) checked++;
   });
 
-  const ppp = r.risk.ppp || 20;
+  const ppp = btDraft.instrument === 'CUSTOM'
+    ? parseFloat(btDraft.customPpp)
+    : pppForInstrument(btDraft.instrument, 20);
   const dir = btDraft.side === 'long' ? 1 : -1;
   const riskPoints = Math.abs(entry - stop);
   const riskDollars = riskPoints * ppp * qty;
@@ -2605,7 +2816,8 @@ async function saveBacktestFromDrawer(dateKey) {
     strategyName: activeStrategy()?.name || '',
     date: btDraft.date,
     side: btDraft.side,
-    instrument: btDraft.instrument.trim() || 'NQ',
+    instrument: btDraft.instrument || 'NQ',
+    ppp,
     entry, stop, exitPrice: exit, qty,
     riskPoints, riskDollars,
     points, pnlPoints: points, pnlDollars, R,
