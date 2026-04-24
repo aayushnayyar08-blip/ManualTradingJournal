@@ -260,7 +260,101 @@
   .adh-cell.a40 { background: rgba(209,73,91,0.5); border-color: var(--red); color: var(--bg); }
   .adh-cell.a0 { background: var(--red); border-color: var(--red); color: var(--bg); }
 
-  /* BACKTEST — single-screen form */
+  /* CALENDAR */
+  .cal-nav { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 0; }
+  .cal-nav-btn { background: var(--panel); border: 1px solid var(--line); color: var(--ink); font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; width: 44px; height: 44px; cursor: pointer; transition: all 0.15s; line-height: 1; }
+  .cal-nav-btn:hover { border-color: var(--ink); background: var(--panel-2); }
+  .cal-month { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 900; letter-spacing: -0.02em; flex: 1; text-align: center; }
+  .cal-today { background: transparent; border: 1px solid var(--line); color: var(--dim); font-family: inherit; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; padding: 10px 16px; cursor: pointer; transition: all 0.15s; font-weight: 600; }
+  .cal-today:hover { color: var(--ink); border-color: var(--ink); }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); touch-action: pan-y; user-select: none; }
+  .cal-dow { background: var(--panel); padding: 10px 8px; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); text-align: center; font-weight: 600; }
+  .cal-cell { background: var(--bg); min-height: 88px; padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; position: relative; transition: background 0.15s; }
+  .cal-cell:hover { background: var(--panel); }
+  .cal-cell.other-month { opacity: 0.3; }
+  .cal-cell.today { background: var(--panel); }
+  .cal-cell.today::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--amber); }
+  .cal-cell.win { background: linear-gradient(180deg, rgba(127,176,105,0.18), rgba(127,176,105,0.04)); }
+  .cal-cell.win:hover { background: linear-gradient(180deg, rgba(127,176,105,0.28), rgba(127,176,105,0.08)); }
+  .cal-cell.loss { background: linear-gradient(180deg, rgba(209,73,91,0.18), rgba(209,73,91,0.04)); }
+  .cal-cell.loss:hover { background: linear-gradient(180deg, rgba(209,73,91,0.28), rgba(209,73,91,0.08)); }
+  .cal-cell.flat { background: linear-gradient(180deg, rgba(230,180,80,0.12), rgba(230,180,80,0.02)); }
+  .cal-date { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--dim); }
+  .cal-cell.today .cal-date { color: var(--amber); }
+  .cal-cell.win .cal-date, .cal-cell.loss .cal-date, .cal-cell.flat .cal-date { color: var(--ink); }
+  .cal-pnl { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; margin-top: auto; line-height: 1.1; letter-spacing: -0.01em; }
+  .cal-pnl.win { color: var(--green); }
+  .cal-pnl.loss { color: var(--red); }
+  .cal-pnl.flat { color: var(--amber); }
+  .cal-count { position: absolute; top: 6px; right: 6px; background: var(--panel-2); border: 1px solid var(--line); color: var(--dim); font-size: 9px; font-weight: 700; padding: 2px 6px; letter-spacing: 0.1em; }
+  .cal-cell.win .cal-count { background: rgba(127,176,105,0.25); border-color: var(--green); color: var(--green); }
+  .cal-cell.loss .cal-count { background: rgba(209,73,91,0.25); border-color: var(--red); color: var(--red); }
+  .cal-dots { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 4px; }
+  .cal-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .cal-dot.w { background: var(--green); }
+  .cal-dot.l { background: var(--red); }
+
+  /* Month summary bar */
+  .month-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; padding: 20px; border: 1px solid var(--line); background: var(--panel); margin-bottom: 20px; }
+  .month-summary .k { font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+  .month-summary .v { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; }
+  .month-summary .v.green { color: var(--green); }
+  .month-summary .v.red { color: var(--red); }
+  .month-summary .sub { font-size: 10px; color: var(--dim); margin-top: 4px; }
+
+  /* Day drawer */
+  .day-drawer { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400; display: none; }
+  .day-drawer.show { display: flex; justify-content: flex-end; animation: fadein 0.15s ease; }
+  .day-drawer-panel { background: var(--bg); width: 520px; max-width: 100%; height: 100%; display: flex; flex-direction: column; border-left: 1px solid var(--line); animation: slidein 0.25s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; }
+  @keyframes slidein { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  .day-drawer-hdr { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 28px; border-bottom: 1px solid var(--line); background: var(--panel); flex-shrink: 0; }
+  .day-drawer-label { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+  .day-drawer-date { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+  .day-drawer-close { background: transparent; border: 1px solid var(--line); color: var(--ink); font-size: 18px; width: 40px; height: 40px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .day-drawer-close:hover { border-color: var(--red); color: var(--red); }
+  .day-drawer-body { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+  .day-trade-card { background: var(--panel); border: 1px solid var(--line); padding: 16px; margin-bottom: 12px; }
+  .day-trade-card:last-child { margin-bottom: 0; }
+  .day-trade-hdr { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; gap: 12px; }
+  .day-trade-side { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; padding: 3px 8px; }
+  .day-trade-side.long { background: var(--green); color: var(--bg); }
+  .day-trade-side.short { background: var(--red); color: var(--bg); }
+  .day-trade-pnl { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; line-height: 1; }
+  .day-trade-pnl.win { color: var(--green); }
+  .day-trade-pnl.loss { color: var(--red); }
+  .day-trade-meta { font-size: 11px; color: var(--dim); letter-spacing: 0.05em; margin-top: 6px; }
+  .day-trade-meta span { margin-right: 12px; }
+  .day-trade-notes { font-size: 11px; color: var(--ink); margin-top: 8px; line-height: 1.4; }
+  .day-trade-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .day-trade-thumb { width: 100%; max-height: 160px; margin-top: 10px; border: 1px solid var(--line); cursor: pointer; object-fit: cover; }
+
+  .day-empty { text-align: center; padding: 40px 20px; color: var(--dim); font-style: italic; font-size: 13px; }
+
+  .day-new-btn { width: 100%; background: var(--ink); color: var(--bg); border: none; padding: 16px; font-family: inherit; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; font-weight: 700; cursor: pointer; transition: all 0.15s; margin-bottom: 16px; }
+  .day-new-btn:hover { background: var(--amber); }
+
+  @media (max-width: 700px) {
+    .day-drawer-panel { width: 100%; border-left: none; animation: slideup 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .day-drawer-hdr { padding: 16px 18px; }
+    .day-drawer-date { font-size: 20px; }
+    .day-drawer-body { padding: 16px 18px; }
+    .cal-cell { min-height: 60px; padding: 6px 6px; }
+    .cal-date { font-size: 11px; }
+    .cal-pnl { font-size: 11px; }
+    .cal-count { font-size: 8px; padding: 1px 4px; top: 4px; right: 4px; }
+    .cal-dow { padding: 6px 2px; font-size: 8px; letter-spacing: 0.15em; }
+    .cal-nav { gap: 8px; }
+    .cal-nav-btn { width: 40px; height: 40px; font-size: 20px; }
+    .cal-month { font-size: 18px; }
+    .cal-today { padding: 8px 10px; font-size: 9px; }
+    .month-summary { grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; }
+    .month-summary .v { font-size: 18px; }
+  }
+
+
   .bt-card { background: var(--panel); border: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; gap: 24px; }
   .bt-context { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
   .bt-section { display: flex; flex-direction: column; gap: 12px; }
@@ -607,24 +701,43 @@
 
   <!-- PANEL 05: BACKTEST -->
   <div class="panel" id="panel-backtest">
-    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; flex-wrap:wrap; gap:10px;">
       <h2 style="font-family:'Fraunces',serif; font-size:28px; font-weight:900; letter-spacing:-0.01em;">Backtest</h2>
       <div style="font-size:10px; color:var(--dim); letter-spacing:0.2em; text-transform:uppercase;" id="btMeta">— entries</div>
     </div>
     <div style="font-size:12px; color:var(--dim); font-style:italic; margin-bottom:20px;" id="btStrategyNote">Log a historical trade with full discipline: checklist, entry, exit.</div>
 
-    <div id="btForm"></div>
+    <!-- Month summary -->
+    <div id="btMonthSummary"></div>
 
-    <div style="margin-top:32px;">
-      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; border-bottom:1px solid var(--line); padding-bottom:8px; flex-wrap:wrap; gap:8px;">
-        <div style="font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim);">Logged Entries</div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <button class="btn-secondary" id="btExport" style="padding:6px 14px; font-size:10px;">Export CSV</button>
-          <button class="btn-secondary" id="btToggleView" style="padding:6px 14px; font-size:10px;">Grid View</button>
+    <!-- Month navigation -->
+    <div class="cal-nav">
+      <button class="cal-nav-btn" id="calPrev" aria-label="Previous month">‹</button>
+      <div class="cal-month" id="calMonthLabel">—</div>
+      <button class="cal-nav-btn" id="calNext" aria-label="Next month">›</button>
+      <button class="cal-today" id="calToday">Today</button>
+    </div>
+
+    <!-- Calendar grid -->
+    <div id="btCalendar"></div>
+
+    <!-- Export strip -->
+    <div style="display:flex; justify-content:flex-end; margin-top:16px; gap:8px;">
+      <button class="btn-secondary" id="btExport" style="padding:6px 14px; font-size:10px;">Export CSV</button>
+    </div>
+  </div>
+
+  <!-- Day drawer (modal on mobile, side panel on desktop) -->
+  <div class="day-drawer" id="dayDrawer">
+    <div class="day-drawer-panel" id="dayDrawerPanel">
+      <div class="day-drawer-hdr">
+        <div>
+          <div class="day-drawer-label" id="dayDrawerLabel">—</div>
+          <div class="day-drawer-date" id="dayDrawerDate">—</div>
         </div>
+        <button class="day-drawer-close" id="dayDrawerClose">✕</button>
       </div>
-      <div id="btSummary" style="margin-bottom:20px;"></div>
-      <div id="btEntries"></div>
+      <div class="day-drawer-body" id="dayDrawerBody"></div>
     </div>
   </div>
 
@@ -1771,20 +1884,335 @@ function drawAsciiChart(pts, w, h) {
 }
 
 // ============================================================
-// BACKTEST — SINGLE-SCREEN FORM
+// BACKTEST — CALENDAR FLOW
 // ============================================================
 let btImageData = null;
 let btDraft = { date: '', side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
+let btCalMonth = null; // {year, month} — 0-indexed month
+let btEditingId = null; // id of backtest being edited (null = new)
+
+function currentCalMonth() {
+  if (!btCalMonth) {
+    const t = getCST();
+    btCalMonth = { year: t.date.getFullYear(), month: t.date.getMonth() };
+  }
+  return btCalMonth;
+}
 
 function renderBacktest() {
-  // initialize defaults
-  if (!btDraft.date) btDraft.date = getCSTDateKey();
+  const { year, month } = currentCalMonth();
+  renderMonthSummary(year, month);
+  renderCalendarGrid(year, month);
+  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
+  document.getElementById('btMeta').textContent = `${bt.length} TOTAL`;
+  document.getElementById('btStrategyNote').textContent = `Tap any day to log or review trades. Strategy: "${activeStrategy()?.name||''}"`;
+}
 
+function renderMonthSummary(year, month) {
+  const wrap = document.getElementById('btMonthSummary');
+  const monthKey = `${year}-${String(month+1).padStart(2,'0')}`;
+  const bt = state.backtests.filter(b =>
+    b.strategyId === state.activeStrategyId &&
+    (b.date || '').startsWith(monthKey)
+  );
+  const all = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
+
+  if (bt.length === 0 && all.length === 0) { wrap.innerHTML = ''; return; }
+
+  if (bt.length === 0) {
+    wrap.innerHTML = `<div class="month-summary" style="grid-template-columns: 1fr;">
+      <div style="text-align:center; color:var(--dim); font-style:italic; font-size:12px;">No trades in this month. All-time: ${all.length} trades.</div>
+    </div>`;
+    return;
+  }
+
+  const totalPnl = bt.reduce((s,x) => s + (x.pnlDollars||0), 0);
+  const totalPts = bt.reduce((s,x) => s + (x.points||0), 0);
+  const wins = bt.filter(x => (x.pnlDollars||0) > 0);
+  const losses = bt.filter(x => (x.pnlDollars||0) <= 0);
+  const wr = (wins.length / bt.length) * 100;
+  const totalWins = wins.reduce((s,x)=>s+(x.pnlDollars||0), 0);
+  const totalLosses = Math.abs(losses.reduce((s,x)=>s+(x.pnlDollars||0), 0));
+  const pf = totalLosses > 0 ? totalWins/totalLosses : (totalWins > 0 ? Infinity : 0);
+  const avgR = bt.filter(x => x.R != null).length > 0
+    ? bt.filter(x => x.R != null).reduce((s,x)=>s+x.R, 0) / bt.filter(x => x.R != null).length
+    : 0;
+
+  // All-time comparison
+  const allPnl = all.reduce((s,x) => s + (x.pnlDollars||0), 0);
+
+  wrap.innerHTML = `
+    <div class="month-summary">
+      <div><div class="k">Net P&amp;L · Month</div><div class="v ${totalPnl>=0?'green':'red'}">${totalPnl>=0?'+':''}$${totalPnl.toFixed(0)}</div><div class="sub">${bt.length} trade${bt.length===1?'':'s'}</div></div>
+      <div><div class="k">Net Points</div><div class="v ${totalPts>=0?'green':'red'}">${totalPts>=0?'+':''}${totalPts.toFixed(1)}</div></div>
+      <div><div class="k">Win Rate</div><div class="v">${wr.toFixed(1)}%</div><div class="sub">${wins.length}W · ${losses.length}L</div></div>
+      <div><div class="k">Profit Factor</div><div class="v ${pf>=1?'green':'red'}">${isFinite(pf) ? pf.toFixed(2) : '∞'}</div></div>
+      <div><div class="k">Avg R</div><div class="v ${avgR>=0?'green':'red'}">${avgR>=0?'+':''}${avgR.toFixed(2)}R</div><div class="sub">All-time: ${allPnl>=0?'+':''}$${allPnl.toFixed(0)}</div></div>
+    </div>
+  `;
+}
+
+function renderCalendarGrid(year, month) {
+  const wrap = document.getElementById('btCalendar');
+  const monthLabel = document.getElementById('calMonthLabel');
+  const monthName = new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  monthLabel.textContent = monthName;
+
+  const first = new Date(year, month, 1);
+  const firstDow = first.getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+
+  // Bucket trades by date
+  const byDate = {};
+  state.backtests.filter(b => b.strategyId === state.activeStrategyId).forEach(b => {
+    if (!b.date) return;
+    (byDate[b.date] = byDate[b.date] || []).push(b);
+  });
+
+  const todayKey = getCSTDateKey();
+
+  let html = '';
+  // Day-of-week headers
+  ['SUN','MON','TUE','WED','THU','FRI','SAT'].forEach(d => {
+    html += `<div class="cal-dow">${d}</div>`;
+  });
+
+  // Previous month tail
+  for (let i = firstDow - 1; i >= 0; i--) {
+    const dayNum = prevMonthDays - i;
+    const prevMonth = month === 0 ? 11 : month - 1;
+    const prevYear = month === 0 ? year - 1 : year;
+    const dateKey = `${prevYear}-${String(prevMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+    html += renderCalCell(dateKey, dayNum, byDate[dateKey], todayKey, true);
+  }
+
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html += renderCalCell(dateKey, d, byDate[dateKey], todayKey, false);
+  }
+
+  // Next month lead-in to fill grid (6 rows * 7 = 42 cells max)
+  const totalShown = firstDow + daysInMonth;
+  const needed = Math.ceil(totalShown / 7) * 7;
+  const trailing = needed - totalShown;
+  for (let i = 1; i <= trailing; i++) {
+    const nextMonth = month === 11 ? 0 : month + 1;
+    const nextYear = month === 11 ? year + 1 : year;
+    const dateKey = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    html += renderCalCell(dateKey, i, byDate[dateKey], todayKey, true);
+  }
+
+  wrap.innerHTML = `<div class="cal-grid" id="calGrid">${html}</div>`;
+
+  // Click handlers
+  wrap.querySelectorAll('[data-date]').forEach(c => {
+    c.addEventListener('click', () => openDayDrawer(c.dataset.date));
+  });
+
+  // Swipe handlers
+  wireCalendarSwipe();
+}
+
+function renderCalCell(dateKey, dayNum, trades, todayKey, otherMonth) {
+  let cls = 'cal-cell';
+  if (otherMonth) cls += ' other-month';
+  if (dateKey === todayKey) cls += ' today';
+
+  let content = `<div class="cal-date">${dayNum}</div>`;
+
+  if (trades && trades.length > 0) {
+    const pnl = trades.reduce((s,t) => s + (t.pnlDollars||0), 0);
+    const isWin = pnl > 0;
+    const isLoss = pnl < 0;
+    const isFlat = pnl === 0;
+    if (isWin) cls += ' win';
+    else if (isLoss) cls += ' loss';
+    else cls += ' flat';
+
+    if (trades.length > 1) {
+      content += `<div class="cal-count">×${trades.length}</div>`;
+    }
+
+    const dots = trades.map(t => `<div class="cal-dot ${(t.pnlDollars||0) > 0 ? 'w' : 'l'}"></div>`).join('');
+    content += `<div class="cal-dots">${dots}</div>`;
+
+    const pnlAbs = Math.abs(pnl);
+    const pnlDisplay = pnlAbs >= 1000 ? `${(pnl/1000).toFixed(1)}k` : pnlAbs.toFixed(0);
+    const pnlClass = isWin ? 'win' : isLoss ? 'loss' : 'flat';
+    content += `<div class="cal-pnl ${pnlClass}">${pnl>=0?'+':'−'}$${pnlDisplay}</div>`;
+  }
+
+  return `<div class="${cls}" data-date="${dateKey}">${content}</div>`;
+}
+
+function wireCalendarSwipe() {
+  const grid = document.getElementById('calGrid');
+  if (!grid) return;
+  let startX = 0, startY = 0, moved = false;
+  grid.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    moved = false;
+  }, { passive: true });
+  grid.addEventListener('touchmove', e => { moved = true; }, { passive: true });
+  grid.addEventListener('touchend', e => {
+    if (!moved) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) navigateMonth(1); else navigateMonth(-1);
+    }
+  }, { passive: true });
+}
+
+function navigateMonth(delta) {
+  const m = currentCalMonth();
+  let newMonth = m.month + delta;
+  let newYear = m.year;
+  while (newMonth < 0) { newMonth += 12; newYear -= 1; }
+  while (newMonth > 11) { newMonth -= 12; newYear += 1; }
+  btCalMonth = { year: newYear, month: newMonth };
+  renderBacktest();
+}
+
+// ============================================================
+// DAY DRAWER
+// ============================================================
+function openDayDrawer(dateKey) {
+  const drawer = document.getElementById('dayDrawer');
+  const trades = state.backtests.filter(b =>
+    b.strategyId === state.activeStrategyId && b.date === dateKey
+  );
+  renderDayDrawerList(dateKey, trades);
+  drawer.classList.add('show');
+}
+
+function closeDayDrawer() {
+  document.getElementById('dayDrawer').classList.remove('show');
+  btEditingId = null;
+  btImageData = null;
+}
+
+function renderDayDrawerList(dateKey, trades) {
+  const dateObj = new Date(dateKey + 'T00:00:00');
+  const niceDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  document.getElementById('dayDrawerLabel').textContent = trades.length ? `${trades.length} Trade${trades.length===1?'':'s'}` : 'No Trades Yet';
+  document.getElementById('dayDrawerDate').textContent = niceDate;
+
+  const body = document.getElementById('dayDrawerBody');
+  let html = `<button class="day-new-btn" id="dayNewBtn">+ Log New Trade</button>`;
+
+  if (trades.length === 0) {
+    html += `<div class="day-empty">Nothing logged on this date. Tap above to add your first replay.</div>`;
+  } else {
+    const netPnl = trades.reduce((s,t) => s + (t.pnlDollars||0), 0);
+    const cls = netPnl >= 0 ? 'win' : 'loss';
+    html += `
+      <div style="display:flex; justify-content:space-between; align-items:baseline; padding:12px 0; border-bottom:1px solid var(--line); margin-bottom:14px;">
+        <div style="font-size:10px; letter-spacing:0.25em; text-transform:uppercase; color:var(--dim);">Day Total</div>
+        <div class="day-trade-pnl ${cls}">${netPnl>=0?'+':''}$${netPnl.toFixed(0)}</div>
+      </div>
+    `;
+    html += trades.map(renderDayTradeCard).join('');
+  }
+
+  body.innerHTML = html;
+
+  document.getElementById('dayNewBtn').addEventListener('click', () => openDayForm(dateKey, null));
+  body.querySelectorAll('[data-bt-edit]').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.btEdit;
+    const t = state.backtests.find(x => x.id === id);
+    if (t) openDayForm(t.date, t);
+  }));
+  body.querySelectorAll('[data-bt-del]').forEach(b => b.addEventListener('click', async () => {
+    if (!confirm('Delete this trade?')) return;
+    const id = b.dataset.btDel;
+    await deleteImage(id);
+    state.backtests = state.backtests.filter(x => x.id !== id);
+    queueSave();
+    const updated = state.backtests.filter(b => b.strategyId === state.activeStrategyId && b.date === dateKey);
+    renderDayDrawerList(dateKey, updated);
+    renderBacktest();
+  }));
+  body.querySelectorAll('[data-bt-view]').forEach(b => b.addEventListener('click', async () => {
+    const id = b.dataset.btView;
+    const img = await fetchImage(id);
+    if (img) openLightbox(img); else toast('Image not found', 'err');
+  }));
+}
+
+function renderDayTradeCard(t) {
+  const pnl = t.pnlDollars || 0;
+  const pos = pnl >= 0;
+  const cls = pos ? 'win' : 'loss';
+  const adhPips = t.entryAdh ? Array.from({length: t.entryAdh.total}, (_, i) =>
+    `<span class="adh-pip ${i < t.entryAdh.checked ? 'on' : ''}"></span>`).join('') : '';
+
+  return `
+    <div class="day-trade-card">
+      <div class="day-trade-hdr">
+        <div>
+          <span class="day-trade-side ${t.side}">${(t.side||'').toUpperCase()}</span>
+          <span style="margin-left:8px; font-size:12px; color:var(--dim);">${escapeHtml(t.instrument||'')}</span>
+          ${t.entry && t.exitPrice ? `<span style="margin-left:8px; color:var(--dim); font-size:11px;">${t.entry.toFixed(2)} → ${t.exitPrice.toFixed(2)}</span>` : ''}
+        </div>
+        <div class="day-trade-pnl ${cls}">${pos?'+':''}$${Math.abs(pnl).toFixed(0)}</div>
+      </div>
+      <div class="day-trade-meta">
+        ${(t.points!=null) ? `<span>${t.points>=0?'+':''}${t.points.toFixed(1)} pts</span>` : ''}
+        ${(t.R!=null) ? `<span>${t.R>=0?'+':''}${t.R.toFixed(2)}R</span>` : ''}
+        ${t.exitReason ? `<span>Exit: ${escapeHtml(t.exitReason)}</span>` : ''}
+        ${t.tag ? `<span style="color:var(--amber);">#${escapeHtml(t.tag)}</span>` : ''}
+      </div>
+      ${adhPips ? `<div class="day-trade-meta"><span>Rules: ${adhPips}</span></div>` : ''}
+      ${t.notes ? `<div class="day-trade-notes">${escapeHtml(t.notes)}</div>` : ''}
+      ${t.hasImage ? `<div style="margin-top:10px; padding:10px; background:var(--bg); border:1px solid var(--line); font-size:10px; color:var(--dim); letter-spacing:0.15em; text-transform:uppercase; text-align:center; cursor:pointer;" data-bt-view="${t.id}">🖼 Screenshot · Tap to View</div>` : ''}
+      <div class="day-trade-actions">
+        <button class="btn-secondary" style="padding:6px 12px; font-size:10px;" data-bt-edit="${t.id}">Edit</button>
+        <button class="btn-danger" style="padding:6px 12px; font-size:10px;" data-bt-del="${t.id}">Delete</button>
+      </div>
+    </div>
+  `;
+}
+
+function openDayForm(dateKey, existing) {
+  btEditingId = existing ? existing.id : null;
+  if (existing) {
+    btDraft = {
+      date: existing.date,
+      side: existing.side || 'long',
+      instrument: existing.instrument || 'NQ',
+      checks: {},
+      entry: existing.entry || '',
+      stop: existing.stop || '',
+      qty: existing.qty || '1',
+      exitPrice: existing.exitPrice || '',
+      exitReason: existing.exitReason || 'vwap',
+      tag: existing.tag || '',
+      notes: existing.notes || ''
+    };
+    // reconstruct checks from entryAdh total+checked? can't precisely, but we can reset
+    btDraft.checks = {};
+    // Existing image — load if present
+    btImageData = null;
+    if (existing.hasImage) {
+      fetchImage(existing.id).then(img => { if (img) { btImageData = img; renderBacktestFormInDrawer(dateKey); } });
+    }
+  } else {
+    btDraft = { date: dateKey, side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
+    btImageData = null;
+  }
+  renderBacktestFormInDrawer(dateKey);
+}
+
+function renderBacktestFormInDrawer(dateKey) {
+  btDraft.date = dateKey;
   const r = activeRules();
   const bucketKey = btDraft.side === 'long' ? 'longEntry' : 'shortEntry';
   const bucket = r[bucketKey] || [];
 
-  // Build checklist
   let checklistHtml = '';
   let total = 0, done = 0;
   bucket.forEach((rule, i) => {
@@ -1800,34 +2228,32 @@ function renderBacktest() {
       </div>
     `;
   });
-
   const hasRules = total > 0;
-  const sideColor = btDraft.side === 'long' ? 'var(--green)' : 'var(--red)';
   const imageStagedClass = btImageData ? 'has-image' : '';
 
-  const formEl = document.getElementById('btForm');
-  formEl.innerHTML = `
+  const body = document.getElementById('dayDrawerBody');
+  document.getElementById('dayDrawerLabel').textContent = btEditingId ? 'Editing Trade' : 'New Trade';
+
+  body.innerHTML = `
+    <div style="margin-bottom:14px;">
+      <button class="btn-secondary" id="backToDayList" style="padding:6px 14px; font-size:10px;">← Back to day</button>
+    </div>
+
     <div class="bt-card">
-      <!-- Context row: date, side, instrument -->
-      <div class="bt-context">
-        <div class="bt-field">
-          <label>Date</label>
-          <input type="date" id="bt_date" value="${btDraft.date}">
-        </div>
-        <div class="bt-field">
-          <label>Side</label>
-          <div class="side-select">
-            <button type="button" class="side-btn long ${btDraft.side === 'long' ? 'active' : ''}" data-bt-side="long">Long</button>
-            <button type="button" class="side-btn short ${btDraft.side === 'short' ? 'active' : ''}" data-bt-side="short">Short</button>
+      <div class="bt-section">
+        <div class="bt-section-hdr"><span>Setup</span></div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="bt-field">
+            <label>Side</label>
+            <div class="side-select">
+              <button type="button" class="side-btn long ${btDraft.side === 'long' ? 'active' : ''}" data-bt-side="long">Long</button>
+              <button type="button" class="side-btn short ${btDraft.side === 'short' ? 'active' : ''}" data-bt-side="short">Short</button>
+            </div>
           </div>
-        </div>
-        <div class="bt-field">
-          <label>Instrument</label>
-          <input type="text" id="bt_instrument" value="${escapeHtml(btDraft.instrument)}">
+          <div class="bt-field"><label>Instrument</label><input type="text" id="bt_instrument" value="${escapeHtml(btDraft.instrument)}"></div>
         </div>
       </div>
 
-      <!-- Checklist -->
       <div class="bt-section">
         <div class="bt-section-hdr"><span>Rules Met · ${btDraft.side}</span><span class="bt-section-count">${done} / ${total}</span></div>
         ${hasRules ? `<div class="bt-checklist">${checklistHtml}</div>` : `
@@ -1836,7 +2262,6 @@ function renderBacktest() {
           </div>`}
       </div>
 
-      <!-- Entry + Exit -->
       <div class="bt-section">
         <div class="bt-section-hdr"><span>Trade</span></div>
         <div class="bt-trade-grid">
@@ -1858,73 +2283,61 @@ function renderBacktest() {
         <div id="bt_calc" class="bt-calc"></div>
       </div>
 
-      <!-- Notes + Screenshot -->
       <div class="bt-section">
         <div class="bt-section-hdr"><span>Notes &amp; Screenshot</span></div>
-        <div class="bt-notes-grid">
-          <div class="bt-field">
-            <label>Notes</label>
-            <textarea id="bt_notes" placeholder="Read on the setup, what happened, what you learned">${escapeHtml(btDraft.notes)}</textarea>
+        <div class="bt-field">
+          <label>Notes</label>
+          <textarea id="bt_notes" placeholder="Read on the setup, what happened, what you learned">${escapeHtml(btDraft.notes)}</textarea>
+        </div>
+        <div class="bt-field" style="margin-top:12px;">
+          <label>Screenshot</label>
+          <div class="drop-zone ${imageStagedClass}" id="btDrop">
+            <input type="file" id="bt_image" accept="image/*" capture="environment" style="display:none">
+            ${btImageData ? `<img src="${btImageData}" style="max-height:140px; max-width:100%;">` : `<div id="dropText">Tap to upload<br><span style="font-size:9px;">or drop / paste</span></div>`}
           </div>
-          <div class="bt-field">
-            <label>Screenshot</label>
-            <div class="drop-zone ${imageStagedClass}" id="btDrop">
-              <input type="file" id="bt_image" accept="image/*" capture="environment" style="display:none">
-              ${btImageData ? `<img src="${btImageData}" style="max-height:120px; max-width:100%;">` : `<div id="dropText">Tap to upload<br><span style="font-size:9px;">or drop / paste</span></div>`}
-            </div>
-            <div style="display:flex; gap:6px; margin-top:6px;">
-              <button type="button" class="btn-ghost" id="btPaste" style="flex:1;">📋 Paste</button>
-              ${btImageData ? `<button type="button" class="btn-ghost" id="btClearImg" style="flex:1; color:var(--red);">✕ Clear</button>` : ''}
-            </div>
+          <div style="display:flex; gap:6px; margin-top:6px;">
+            <button type="button" class="btn-ghost" id="btPaste" style="flex:1;">📋 Paste</button>
+            ${btImageData ? `<button type="button" class="btn-ghost" id="btClearImg" style="flex:1; color:var(--red);">✕ Clear</button>` : ''}
           </div>
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="bt-actions">
         <button class="btn-secondary" id="btReset">Reset</button>
-        <button class="btn-primary" id="btSave">Save Entry →</button>
+        <button class="btn-primary" id="btSave">${btEditingId ? 'Update Trade →' : 'Save Trade →'}</button>
       </div>
     </div>
   `;
 
-  renderBacktestList();
-  renderBacktestSummary();
-  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
-  document.getElementById('btMeta').textContent = `${bt.length} ENTRIES`;
-  document.getElementById('btStrategyNote').textContent = `Log a historical trade with full discipline. Strategy: "${activeStrategy()?.name||''}"`;
+  document.getElementById('backToDayList').addEventListener('click', () => {
+    const trades = state.backtests.filter(b => b.strategyId === state.activeStrategyId && b.date === dateKey);
+    renderDayDrawerList(dateKey, trades);
+  });
 
-  wireBacktestFormHandlers();
+  wireBacktestFormHandlersInDrawer(dateKey);
   updateBacktestCalc();
 }
 
-function wireBacktestFormHandlers() {
-  // Side toggle
+function wireBacktestFormHandlersInDrawer(dateKey) {
   document.querySelectorAll('[data-bt-side]').forEach(btn => {
     btn.addEventListener('click', () => {
       btDraft.side = btn.dataset.btSide;
-      btDraft.checks = {}; // reset checks when switching side
-      renderBacktest();
+      btDraft.checks = {};
+      renderBacktestFormInDrawer(dateKey);
     });
   });
 
-  // Date, instrument
-  const dateEl = document.getElementById('bt_date');
-  if (dateEl) dateEl.addEventListener('input', e => { btDraft.date = e.target.value; });
   const instEl = document.getElementById('bt_instrument');
   if (instEl) instEl.addEventListener('input', e => { btDraft.instrument = e.target.value; });
 
-  // Checklist
   document.querySelectorAll('[data-bt-check]').forEach(item => {
     item.addEventListener('click', () => {
       const i = parseInt(item.dataset.btCheck);
       btDraft.checks[i] = !btDraft.checks[i];
-      // re-render just the checklist to avoid losing focus on inputs
-      renderBacktest();
+      renderBacktestFormInDrawer(dateKey);
     });
   });
 
-  // Numeric fields: live calc
   ['bt_entry','bt_stop','bt_exitPrice','bt_qty'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -1943,17 +2356,16 @@ function wireBacktestFormHandlers() {
     });
   });
 
-  // Image handling
   const drop = document.getElementById('btDrop');
   const input = document.getElementById('bt_image');
   if (drop) {
     drop.addEventListener('click', () => input.click());
-    input.addEventListener('change', e => { if (e.target.files[0]) { stageImage(e.target.files[0]).then(() => renderBacktest()); } });
+    input.addEventListener('change', e => { if (e.target.files[0]) { stageImage(e.target.files[0]).then(() => renderBacktestFormInDrawer(dateKey)); } });
     drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
     drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
     drop.addEventListener('drop', e => {
       e.preventDefault(); drop.classList.remove('dragover');
-      if (e.dataTransfer.files[0]) stageImage(e.dataTransfer.files[0]).then(() => renderBacktest());
+      if (e.dataTransfer.files[0]) stageImage(e.dataTransfer.files[0]).then(() => renderBacktestFormInDrawer(dateKey));
     });
   }
   const pasteBtn = document.getElementById('btPaste');
@@ -1962,24 +2374,24 @@ function wireBacktestFormHandlers() {
       const items = await navigator.clipboard.read();
       for (const item of items) {
         for (const type of item.types) {
-          if (type.startsWith('image/')) { const blob = await item.getType(type); await stageImage(blob); renderBacktest(); return; }
+          if (type.startsWith('image/')) { const blob = await item.getType(type); await stageImage(blob); renderBacktestFormInDrawer(dateKey); return; }
         }
       }
       toast('No image in clipboard', 'err');
     } catch { toast('Paste not available — try drop', 'err'); }
   });
   const clearImgBtn = document.getElementById('btClearImg');
-  if (clearImgBtn) clearImgBtn.addEventListener('click', () => { btImageData = null; renderBacktest(); });
+  if (clearImgBtn) clearImgBtn.addEventListener('click', () => { btImageData = null; renderBacktestFormInDrawer(dateKey); });
 
-  // Actions
   document.getElementById('btReset').addEventListener('click', () => {
-    if (!confirm('Reset the form? Unsaved data will be lost.')) return;
-    btDraft = { date: getCSTDateKey(), side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
+    if (!confirm('Reset the form?')) return;
+    btDraft = { date: dateKey, side: 'long', instrument: 'NQ', checks: {}, entry: '', stop: '', qty: '1', exitPrice: '', exitReason: 'vwap', tag: '', notes: '' };
     btImageData = null;
-    renderBacktest();
+    renderBacktestFormInDrawer(dateKey);
   });
-  document.getElementById('btSave').addEventListener('click', saveBacktest);
+  document.getElementById('btSave').addEventListener('click', () => saveBacktestFromDrawer(dateKey));
 }
+
 
 function updateBacktestCalc() {
   const el = document.getElementById('bt_calc');
@@ -2072,105 +2484,6 @@ async function saveBacktest() {
 }
 
 
-function renderBacktestSummary() {
-  const wrap = document.getElementById('btSummary');
-  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId);
-  if (bt.length === 0) { wrap.innerHTML = ''; return; }
-  const total = bt.reduce((s,x) => s + (x.pnlDollars||x.points*20||0), 0);
-  const totalPts = bt.reduce((s,x) => s + (x.points||0), 0);
-  const wins = bt.filter(x => (x.pnlDollars||x.points) > 0);
-  const losses = bt.filter(x => (x.pnlDollars||x.points) <= 0);
-  const wr = (wins.length / bt.length) * 100;
-  const avgR = bt.filter(x => x.R != null).reduce((s,x,_,arr) => s + x.R/arr.length, 0);
-  const totalWins = wins.reduce((s,x)=>s+(x.pnlDollars||0), 0);
-  const totalLosses = Math.abs(losses.reduce((s,x)=>s+(x.pnlDollars||0), 0));
-  const pf = totalLosses > 0 ? totalWins/totalLosses : (totalWins > 0 ? Infinity : 0);
-
-  wrap.innerHTML = `
-    <div class="bt-summary">
-      <div><div class="k">Net P&amp;L</div><div class="v ${total>=0?'green':'red'}">${total>=0?'+':''}$${total.toFixed(0)}</div></div>
-      <div><div class="k">Net Points</div><div class="v ${totalPts>=0?'green':'red'}">${totalPts>=0?'+':''}${totalPts.toFixed(1)}</div></div>
-      <div><div class="k">Win Rate</div><div class="v">${wr.toFixed(1)}%</div></div>
-      <div><div class="k">Profit Factor</div><div class="v ${pf>=1?'green':'red'}">${isFinite(pf) ? pf.toFixed(2) : '∞'}</div></div>
-      <div><div class="k">Avg R</div><div class="v ${avgR>=0?'green':'red'}">${avgR>=0?'+':''}${avgR.toFixed(2)}R</div></div>
-    </div>`;
-}
-
-function renderBacktestList() {
-  const el = document.getElementById('btEntries');
-  const bt = state.backtests.filter(b => b.strategyId === state.activeStrategyId).sort((a,b) => (b.date||'').localeCompare(a.date||''));
-  if (bt.length === 0) {
-    el.innerHTML = `<div class="empty"><div class="glyph">§</div>No replays logged yet.</div>`;
-    return;
-  }
-  if (state.backtestView === 'grid') {
-    el.innerHTML = `<div class="bt-grid">${bt.map(renderBacktestCard).join('')}</div>`;
-  } else {
-    el.innerHTML = `<div class="bt-list">${bt.map(renderBacktestRow).join('')}</div>`;
-  }
-  el.querySelectorAll('[data-btdel]').forEach(b => b.addEventListener('click', async e => {
-    e.stopPropagation();
-    if (!confirm('Delete this replay?')) return;
-    const id = b.dataset.btdel;
-    await deleteImage(id);
-    state.backtests = state.backtests.filter(x => x.id !== id);
-    queueSave();
-    renderBacktest();
-  }));
-  el.querySelectorAll('[data-btview]').forEach(b => b.addEventListener('click', async e => {
-    e.stopPropagation();
-    const id = b.dataset.btview;
-    const img = await fetchImage(id);
-    if (img) openLightbox(img); else toast('Image not found', 'err');
-  }));
-}
-
-function renderBacktestRow(b) {
-  const pnl = b.pnlDollars != null ? b.pnlDollars : (b.points||0) * 20;
-  const pts = b.points || 0;
-  const pos = pnl >= 0;
-  const sideColor = b.side === 'long' ? 'var(--green)' : 'var(--red)';
-  const adhPips = b.entryAdh ? Array.from({length: b.entryAdh.total}, (_, i) =>
-    `<span class="adh-pip ${i < b.entryAdh.checked ? 'on' : ''}"></span>`).join('') : '';
-  return `
-    <div class="bt-entry">
-      <div class="bt-date"><div class="d">${b.date || '—'}</div><div>${escapeHtml(b.time || '')}</div></div>
-      <div class="bt-thumb" ${b.hasImage ? `data-btview="${b.id}"` : ''}>${b.hasImage ? 'VIEW IMG' : 'NO IMG'}</div>
-      <div class="bt-body">
-        <div>
-          <span style="color:${sideColor}; font-weight:700; letter-spacing:0.15em; font-size:11px;">${(b.side||'').toUpperCase()}</span>
-          <span style="color:var(--dim); margin-left:8px;">${escapeHtml(b.instrument || '')}</span>
-          ${b.entry && b.exitPrice ? `<span style="color:var(--dim); margin-left:8px; font-size:11px;">${b.entry.toFixed(2)} → ${b.exitPrice.toFixed(2)}</span>` : ''}
-          ${b.tag ? `<span style="margin-left:8px; font-size:10px; padding:2px 6px; background:var(--panel-2); color:var(--amber); letter-spacing:0.15em;">${escapeHtml(b.tag)}</span>` : ''}
-          ${b.stale ? '<span class="stale-tag">STALE</span>' : ''}
-        </div>
-        ${b.setupNotes || b.exitNotes ? `<div style="margin-top:6px; font-size:11px;">${escapeHtml(b.setupNotes || b.exitNotes || '')}</div>` : ''}
-        <div class="meta">${b.exitReason ? `<span>Exit: ${escapeHtml(b.exitReason)}</span>` : ''}${adhPips ? `<span>Rules: ${adhPips}</span>` : ''}</div>
-      </div>
-      <div class="bt-pts">
-        <div class="pts ${pos?'pos':'neg'}">${pos?'+':''}$${Math.abs(pnl).toFixed(0)}</div>
-        <div class="r">${pts>=0?'+':''}${pts.toFixed(1)} pts · ${b.R != null ? (b.R>=0?'+':'') + b.R.toFixed(2) + 'R' : ''}</div>
-      </div>
-      <div><button class="btn-danger" data-btdel="${b.id}">Delete</button></div>
-    </div>`;
-}
-
-function renderBacktestCard(b) {
-  const pnl = b.pnlDollars != null ? b.pnlDollars : (b.points||0) * 20;
-  const pos = pnl >= 0;
-  const sideColor = b.side === 'long' ? 'var(--green)' : 'var(--red)';
-  return `
-    <div class="bt-grid-card">
-      <div class="thumb" ${b.hasImage ? `data-btview="${b.id}"` : ''}>${b.hasImage ? 'VIEW IMG' : 'NO IMAGE'}</div>
-      <div class="body">
-        <div class="hd"><span class="date">${b.date || '—'}</span><span class="pts ${pos?'pos':'neg'}">${pos?'+':''}$${Math.abs(pnl).toFixed(0)}</span></div>
-        <div style="font-size:10px; letter-spacing:0.15em; text-transform:uppercase;"><span style="color:${sideColor}; font-weight:700;">${(b.side||'').toUpperCase()}</span><span style="color:var(--dim); margin-left:6px;">${escapeHtml(b.instrument || '')}</span>${b.R!=null?`<span style="color:var(--dim); margin-left:6px;">${b.R>=0?'+':''}${b.R.toFixed(2)}R</span>`:''}${b.stale?'<span class="stale-tag">STALE</span>':''}</div>
-        ${b.setupNotes || b.exitNotes ? `<div class="notes">${escapeHtml(b.setupNotes || b.exitNotes || '')}</div>` : ''}
-        <div style="display:flex; justify-content:flex-end; margin-top:8px;"><button class="btn-danger" data-btdel="${b.id}" style="font-size:9px; padding:4px 8px;">Delete</button></div>
-      </div>
-    </div>`;
-}
-
 function markStaleBacktests() {
   const sid = state.activeStrategyId;
   state.backtests.forEach(b => { if (b.strategyId === sid) b.stale = true; });
@@ -2219,23 +2532,122 @@ async function stageImage(file) {
 
 function wireBacktestForm() {
   document.getElementById('btExport').addEventListener('click', exportBacktests);
-  document.getElementById('btToggleView').addEventListener('click', () => {
-    state.backtestView = state.backtestView === 'list' ? 'grid' : 'list';
-    document.getElementById('btToggleView').textContent = state.backtestView === 'list' ? 'Grid View' : 'List View';
-    renderBacktestList();
+  document.getElementById('calPrev').addEventListener('click', () => navigateMonth(-1));
+  document.getElementById('calNext').addEventListener('click', () => navigateMonth(1));
+  document.getElementById('calToday').addEventListener('click', () => {
+    const t = getCST();
+    btCalMonth = { year: t.date.getFullYear(), month: t.date.getMonth() };
+    renderBacktest();
+  });
+  document.getElementById('dayDrawerClose').addEventListener('click', closeDayDrawer);
+  document.getElementById('dayDrawer').addEventListener('click', e => {
+    if (e.target.id === 'dayDrawer') closeDayDrawer();
   });
 
-  // paste handler for active backtest panel — stages image then re-renders
-  document.addEventListener('paste', async e => {
+  // Keyboard nav: arrow keys shift month when calendar panel active
+  document.addEventListener('keydown', e => {
     if (!document.getElementById('panel-backtest').classList.contains('active')) return;
+    if (document.getElementById('dayDrawer').classList.contains('show')) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'ArrowLeft') { navigateMonth(-1); e.preventDefault(); }
+    else if (e.key === 'ArrowRight') { navigateMonth(1); e.preventDefault(); }
+  });
+
+  // paste handler for active drawer — stages image then re-renders
+  document.addEventListener('paste', async e => {
+    const drawer = document.getElementById('dayDrawer');
+    if (!drawer.classList.contains('show')) return;
+    if (!document.getElementById('btDrop')) return; // only when form is open in drawer
     const items = e.clipboardData?.items || [];
     for (const item of items) {
       if (item.type.startsWith('image/')) {
         const blob = item.getAsFile();
-        if (blob) { await stageImage(blob); e.preventDefault(); renderBacktest(); return; }
+        if (blob) {
+          await stageImage(blob);
+          e.preventDefault();
+          renderBacktestFormInDrawer(btDraft.date);
+          return;
+        }
       }
     }
   });
+}
+
+async function saveBacktestFromDrawer(dateKey) {
+  const entry = parseFloat(btDraft.entry);
+  const stop = parseFloat(btDraft.stop);
+  const exit = parseFloat(btDraft.exitPrice);
+  const qty = parseFloat(btDraft.qty) || 1;
+  if (isNaN(entry) || isNaN(stop) || isNaN(exit)) { toast('Entry, stop, and exit required', 'err'); return; }
+
+  const r = activeRules();
+  const bucketKey = btDraft.side === 'long' ? 'longEntry' : 'shortEntry';
+  const bucket = r[bucketKey] || [];
+  let total = 0, checked = 0;
+  bucket.forEach((rule, i) => {
+    if (!rule.trim()) return;
+    total++;
+    if (btDraft.checks[i]) checked++;
+  });
+
+  const ppp = r.risk.ppp || 20;
+  const dir = btDraft.side === 'long' ? 1 : -1;
+  const riskPoints = Math.abs(entry - stop);
+  const riskDollars = riskPoints * ppp * qty;
+  const points = (exit - entry) * dir;
+  const pnlDollars = points * ppp * qty;
+  const R = riskPoints > 0 ? points / riskPoints : 0;
+
+  const id = btEditingId || ('BT' + Date.now().toString(36).toUpperCase());
+  const record = {
+    id,
+    strategyId: state.activeStrategyId,
+    strategyName: activeStrategy()?.name || '',
+    date: btDraft.date,
+    side: btDraft.side,
+    instrument: btDraft.instrument.trim() || 'NQ',
+    entry, stop, exitPrice: exit, qty,
+    riskPoints, riskDollars,
+    points, pnlPoints: points, pnlDollars, R,
+    win: pnlDollars > 0,
+    exitReason: btDraft.exitReason,
+    tag: btDraft.tag.trim(),
+    notes: btDraft.notes.trim(),
+    setupNotes: btDraft.notes.trim(),
+    entryAdh: { checked, total },
+    hasImage: !!btImageData,
+    stale: false,
+    createdAt: btEditingId ? (state.backtests.find(x => x.id === btEditingId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (btImageData) {
+    try { localStorage.setItem('ledger:img:' + id, btImageData); } catch {}
+    uploadImage(id, btImageData).catch(()=>{});
+  } else if (btEditingId) {
+    // user cleared image on edit
+    const existing = state.backtests.find(x => x.id === btEditingId);
+    if (existing?.hasImage) {
+      await deleteImage(id);
+    }
+  }
+
+  if (btEditingId) {
+    state.backtests = state.backtests.map(x => x.id === btEditingId ? record : x);
+  } else {
+    state.backtests.unshift(record);
+  }
+
+  btEditingId = null;
+  btImageData = null;
+  btDraft.entry = ''; btDraft.stop = ''; btDraft.exitPrice = ''; btDraft.notes = ''; btDraft.tag = ''; btDraft.checks = {};
+
+  queueSave();
+  renderBacktest();
+  // return to day list
+  const trades = state.backtests.filter(b => b.strategyId === state.activeStrategyId && b.date === dateKey);
+  renderDayDrawerList(dateKey, trades);
+  toast(`${btEditingId ? 'Updated' : 'Logged'} · ${pnlDollars>=0?'+':''}$${pnlDollars.toFixed(0)} (${R>=0?'+':''}${R.toFixed(2)}R)`, pnlDollars >= 0 ? 'ok' : 'err');
 }
 
 function exportBacktests() {
